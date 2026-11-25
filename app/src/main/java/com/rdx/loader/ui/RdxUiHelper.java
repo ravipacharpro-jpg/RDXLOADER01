@@ -39,7 +39,6 @@ public final class RdxUiHelper {
             return;
         }
 
-        root.setAnimationCacheEnabled(true);
         root.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 v.animate().scaleX(0.94f).scaleY(0.94f).setDuration(90).start();

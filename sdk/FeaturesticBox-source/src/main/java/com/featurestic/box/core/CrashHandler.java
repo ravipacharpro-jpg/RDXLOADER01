@@ -154,4 +154,50 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         } catch (Throwable ignored) {
         }
     }
+
+    public static void reportDiagnosticLogs(String reason, Runnable onComplete) {
+        Thread reporter = new Thread(() -> {
+            boolean uploaded = false;
+            try {
+                java.net.URL url = new java.net.URL(
+                        "https://featurestic-box-panel.vercel.app/api/telemetry/crash");
+                java.net.HttpURLConnection conn =
+                        (java.net.HttpURLConnection) url.openConnection();
+                try {
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    conn.setConnectTimeout(2500);
+                    conn.setReadTimeout(2500);
+                    conn.setDoOutput(true);
+
+                    org.json.JSONObject json = new org.json.JSONObject();
+                    json.put("brand", android.os.Build.BRAND);
+                    json.put("model", android.os.Build.MODEL);
+                    json.put("android_version", android.os.Build.VERSION.RELEASE);
+                    json.put("sdk_int", android.os.Build.VERSION.SDK_INT);
+                    json.put("crash_type", "Manual Diagnostic Logs");
+                    json.put("crash_category", "diagnostic_logs");
+                    json.put("stacktrace", reason == null ? "Manual upload" : reason);
+
+                    byte[] body = json.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    try (java.io.OutputStream os = conn.getOutputStream()) {
+                        os.write(body);
+                    }
+                    int code = conn.getResponseCode();
+                    uploaded = code >= 200 && code < 300;
+                } finally {
+                    conn.disconnect();
+                }
+            } catch (Throwable ignored) {
+            }
+            if (uploaded && onComplete != null) {
+                try {
+                    onComplete.run();
+                } catch (Throwable ignored) {
+                }
+            }
+        }, "FBoxDiagnosticReporter");
+        reporter.setDaemon(true);
+        reporter.start();
+    }
 }
