@@ -64,11 +64,15 @@ public class RCore {
     public String redirectPath(String path) {
         if (TextUtils.isEmpty(path))
             return path;
+        if (path.startsWith("/dev/pts") || path.equals("/dev/ptmx")) {
+            return "/system/nonexistent_device_pts";
+        }
         if (path.startsWith("/system/fonts/")
                 || path.startsWith("/system/framework/")
                 || path.startsWith("/apex/")
                 || path.startsWith("/vendor/firmware/")
                 || path.contains("/SdCard/")
+                || path.contains("/Sdcard/")
                 || path.contains("/files/data/")
                 || path.contains("/files/user_de/")) {
             return path;

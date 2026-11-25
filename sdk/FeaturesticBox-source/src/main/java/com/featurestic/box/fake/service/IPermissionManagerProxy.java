@@ -27,7 +27,7 @@ import com.featurestic.box.utils.compat.BuildCompat;
 import com.featurestic.box.utils.compat.ContextCompat;
 
 /**
- * Fixed for Android 10-16.
+ * Fixed for Android 10–16.
  * Keeps normal manifest permissions visible to SDKs running in a virtual app.
  */
 public class IPermissionManagerProxy extends BinderInvocationStub {

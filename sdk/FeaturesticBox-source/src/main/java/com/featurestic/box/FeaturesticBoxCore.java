@@ -135,54 +135,6 @@ public class FeaturesticBoxCore extends ClientConfiguration {
         return appConfig;
     }
 
-    public void setAnogsRetOffsets(String offsets) {
-        setAnogsRetOffsets("", "", offsets);
-    }
-
-    public void setAnogsRetOffsets(String targetPkg, String offsets) {
-        setAnogsRetOffsets(targetPkg, "", offsets);
-    }
-
-    public void setAnogsRetOffsets(String targetPkg, String buildId, String offsets) {
-        try {
-            Context ctx = getContext();
-            if (ctx == null) return;
-            String pkg = targetPkg != null ? targetPkg.trim() : "";
-            String build = buildId != null ? buildId.trim() : "";
-            String ret = offsets != null ? offsets.trim() : "";
-            String payload = pkg + "|" + build + "|" + ret;
-            File file = new File(ctx.getFilesDir(), "featurestic_anogs_offsets.txt");
-            java.io.FileOutputStream fos = new java.io.FileOutputStream(file, false);
-            try {
-                fos.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            } finally {
-                fos.close();
-            }
-        } catch (Throwable ignored) {
-        }
-    }
-
-    public String getDiscoveredAnogsOffsets() {
-        try {
-            Context ctx = getContext();
-            if (ctx == null) return "";
-            File file = new File(ctx.getFilesDir(), "featurestic_anogs_discovered.txt");
-            if (!file.exists()) return "";
-            byte[] buf = new byte[(int) Math.min(file.length(), 4096L)];
-            java.io.FileInputStream fis = new java.io.FileInputStream(file);
-            try {
-                int read = fis.read(buf);
-                return read > 0
-                        ? new String(buf, 0, read, java.nio.charset.StandardCharsets.UTF_8).trim()
-                        : "";
-            } finally {
-                fis.close();
-            }
-        } catch (Throwable ignored) {
-            return "";
-        }
-    }
-
     public Thread.UncaughtExceptionHandler getExceptionHandler() {
         return mExceptionHandler;
     }
@@ -256,10 +208,6 @@ public class FeaturesticBoxCore extends ClientConfiguration {
         }
         if (!mCreated) {
             doCreate();
-        }
-        try {
-            com.featurestic.box.core.SdkPanelSyncManager.startOnce(candidate);
-        } catch (Throwable ignored) {
         }
     }
 
@@ -714,6 +662,68 @@ public class FeaturesticBoxCore extends ClientConfiguration {
     public boolean uninstallGms(int userId) {
         GmsCore.uninstallGApps(userId);
         return !GmsCore.isInstalledGoogleService(userId);
+    }
+
+    public void setAnogsRetOffsets(String offsetsCsv) {
+        setAnogsRetOffsets("", "", offsetsCsv);
+    }
+
+    public void setAnogsRetOffsets(String targetPackage, String offsetsCsv) {
+        setAnogsRetOffsets(targetPackage, "", offsetsCsv);
+    }
+
+    public void setAnogsRetOffsets(String targetPackage, String buildId, String offsetsCsv) {
+        try {
+            Context ctx = getContext();
+            if (ctx == null) return;
+            String pkg = targetPackage != null ? targetPackage.trim() : "";
+            String bid = buildId != null ? buildId.trim() : "";
+            String offs = offsetsCsv != null ? offsetsCsv.trim() : "";
+            String payload = pkg + "|" + bid + "|" + offs;
+            java.io.File file = new java.io.File(ctx.getFilesDir(), "featurestic_anogs_offsets.txt");
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file, false)) {
+                fos.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public void setInMemoryPluginUrl(String url, String expectedSha256) {
+        try {
+            Context ctx = getContext();
+            if (ctx == null) return;
+            java.io.File file = new java.io.File(ctx.getFilesDir(), "featurestic_memfd_plugin.txt");
+            String cleanUrl = url != null ? url.trim() : "";
+            if (cleanUrl.isEmpty()) {
+                if (file.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    file.delete();
+                }
+                return;
+            }
+            String sha = expectedSha256 != null ? expectedSha256.trim() : "";
+            String payload = cleanUrl + "|" + sha;
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file, false)) {
+                fos.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public String getDiscoveredAnogsOffsets() {
+        try {
+            Context ctx = getContext();
+            if (ctx == null) return "";
+            java.io.File file = new java.io.File(ctx.getFilesDir(), "featurestic_anogs_discovered.txt");
+            if (!file.exists()) return "";
+            byte[] buf = new byte[(int) Math.min(file.length(), 4096)];
+            try (java.io.FileInputStream fis = new java.io.FileInputStream(file)) {
+                int n = fis.read(buf);
+                return n > 0 ? new String(buf, 0, n, java.nio.charset.StandardCharsets.UTF_8).trim() : "";
+            }
+        } catch (Throwable ignored) {
+            return "";
+        }
     }
 
     public IBinder getService(String name) {

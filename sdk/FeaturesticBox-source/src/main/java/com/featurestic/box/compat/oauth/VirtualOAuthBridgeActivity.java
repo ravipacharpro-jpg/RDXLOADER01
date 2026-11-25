@@ -313,7 +313,7 @@ public final class VirtualOAuthBridgeActivity extends Activity {
             header.addView(titleCol, tcLp);
 
             TextView closeBtn = new TextView(this);
-            closeBtn.setText("Close");
+            closeBtn.setText("✕");
             closeBtn.setTextColor(Color.parseColor("#9AA0A6"));
             closeBtn.setTextSize(17f);
             closeBtn.setPadding(dp(8), dp(4), dp(4), dp(4));
@@ -640,7 +640,7 @@ public final class VirtualOAuthBridgeActivity extends Activity {
             }
 
             TextView closeBtn = new TextView(this);
-            closeBtn.setText("Close");
+            closeBtn.setText("✕");
             closeBtn.setTextColor(Color.parseColor("#9AA0A6"));
             closeBtn.setTextSize(16f);
             closeBtn.setPadding(dp(8), dp(2), dp(4), dp(2));
@@ -1089,7 +1089,7 @@ public final class VirtualOAuthBridgeActivity extends Activity {
             if (saved != null) {
                 for (com.featurestic.box.compat.auth.MicroGGoogleAuthEngine.AccountRecord rec : saved) {
                     if (rec != null && rec.email != null && rec.email.equalsIgnoreCase(normalized)) {
-                        Log.i(TAG, "Matched saved MicroG account for " + normalized + " - 1-tap real token exchange!");
+                        Log.i(TAG, "Matched saved MicroG account for " + normalized + " — 1-tap real token exchange!");
                         performMicroGTokenExchangeAndFinish(rec);
                         return;
                     }
@@ -1097,7 +1097,7 @@ public final class VirtualOAuthBridgeActivity extends Activity {
             }
         } catch (Throwable ignored) {
         }
-        Log.i(TAG, "First-time MicroG link for " + normalized + " - launching pre-filled EmbeddedSetup");
+        Log.i(TAG, "First-time MicroG link for " + normalized + " — launching pre-filled EmbeddedSetup");
         launchMicroGEmbeddedSetupWebView(normalized);
     }
 
@@ -1200,7 +1200,7 @@ public final class VirtualOAuthBridgeActivity extends Activity {
             } else {
                 brandTitle = "Sign In";
                 brandSubtitle = "Continue to game";
-                brandIconText = "Star";
+                brandIconText = "★";
                 brandColor = Color.parseColor("#A855F7");
                 brandBgColor = Color.parseColor("#A855F7");
             }
@@ -1311,7 +1311,7 @@ public final class VirtualOAuthBridgeActivity extends Activity {
             header.addView(switchIdBtn, pillLp);
 
             TextView closeBtn = new TextView(this);
-            closeBtn.setText("Close");
+            closeBtn.setText("✕");
             closeBtn.setTextColor(Color.parseColor("#8E92A4"));
             closeBtn.setTextSize(16f);
             closeBtn.setGravity(Gravity.CENTER);
@@ -2070,7 +2070,8 @@ public final class VirtualOAuthBridgeActivity extends Activity {
                 callback.setComponent(new ComponentName(
                         targetPackage, FACEBOOK_CUSTOM_TAB_MAIN_ACTIVITY));
                 callback.putExtra(FACEBOOK_CUSTOM_TAB_EXTRA_URL, callbackUri.toString());
-                callback.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                callback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
                         | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 BActivityManager.get().startActivity(callback, targetUserId);
                 Log.i(TAG, "facebook stage=custom_tab_main_handoff delivered=true");
@@ -2088,7 +2089,8 @@ public final class VirtualOAuthBridgeActivity extends Activity {
                         targetPackage, FACEBOOK_CUSTOM_TAB_ACTIVITY));
                 callback.addCategory(Intent.CATEGORY_DEFAULT);
                 callback.addCategory(Intent.CATEGORY_BROWSABLE);
-                callback.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                callback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
                         | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 BActivityManager.get().startActivity(callback, targetUserId);
                 Log.i(TAG, "facebook stage=custom_tab_activity_handoff delivered=true");
@@ -2106,7 +2108,8 @@ public final class VirtualOAuthBridgeActivity extends Activity {
                         targetPackage, "com.itop.imsdk.android.base.login.customtabs.ITOPCustomTabActivity"));
                 callback.addCategory(Intent.CATEGORY_DEFAULT);
                 callback.addCategory(Intent.CATEGORY_BROWSABLE);
-                callback.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                callback.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TOP
                         | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 BActivityManager.get().startActivity(callback, targetUserId);
                 Log.i(TAG, "facebook stage=itop_custom_tab_handoff delivered=true");

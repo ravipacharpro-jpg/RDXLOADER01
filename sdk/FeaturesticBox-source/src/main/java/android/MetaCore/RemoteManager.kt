@@ -52,7 +52,7 @@ class RemoteManager private constructor() : IRemoteManager.Stub() {
         sHideRoot = true
         sHideXposed = true
         nk.setHidden("online")
-        nk.Msg = "OK FeaturesticBox Activated (Keyless Testing Mode)"
+        nk.Msg = "✅ FeaturesticBox Activated (Keyless Testing Mode)"
         try {
             val ctx = FeaturesticBoxCore.getContext()
             ctx?.getSharedPreferences(nk.PREFERENCE_NAME, Context.MODE_PRIVATE)?.edit()
@@ -75,7 +75,7 @@ class RemoteManager private constructor() : IRemoteManager.Stub() {
     }
 
     override fun getActivatedSdk(): Boolean {
-        nk.Msg = "OK SDK IS ACTIVATED"
+        nk.Msg = "✅ SDK IS ACTIVATED"
         return true
     }
 
@@ -84,7 +84,7 @@ class RemoteManager private constructor() : IRemoteManager.Stub() {
     }
 
     override fun getNetwork(): Boolean {
-        nk.Msg = "OK Network: Connected"
+        nk.Msg = "✅ Network: Connected"
         return true
     }
 }

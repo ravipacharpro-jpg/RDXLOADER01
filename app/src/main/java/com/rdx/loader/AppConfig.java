@@ -38,10 +38,8 @@ public final class AppConfig {
     public static final boolean ENABLE_HIDE_XPOSED    = true;
     public static final boolean ENABLE_LOW_LATENCY    = true;
 
-    // Plugin .so files are downloaded at runtime and staged into the virtual
-    // game process using their own file names.
-    // Add the second .so link below when it is available.
-    public static final String MOD_SO_URL    = "https://github.com/ravipacharpro-jpg/dark-plugin/releases/download/v1.0.0/libDARK.so";
+    // Zero disk leak: Plugin .so files are managed directly from the panel and loaded purely into RAM via memfd.
+    public static final String MOD_SO_URL    = "";
     public static final String OFFSET_SO_URL = "";
 
     public static final String TELEGRAM_CHANNEL_URL  = "https://t.me/RJ_OWNER";

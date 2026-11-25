@@ -351,7 +351,7 @@ public final class FeaturesticOverlayManager {
         telemetryText.setTypeface(sfSemibold);
         telemetryText.setTextColor(Color.parseColor("#F5F5F7"));
         telemetryText.setPadding(dp(activity, 8), 0, dp(activity, 8), 0);
-        telemetryText.setText("-- FPS - --ms - --°C");
+        telemetryText.setText("-- FPS • --ms • --°C");
         islandCapsule.addView(telemetryText);
 
         final View pingStatusDot = new View(activity);
@@ -404,7 +404,7 @@ public final class FeaturesticOverlayManager {
         final int slotId = BActivityThread.isThreadInit() ? BActivityThread.getUserId() : 0;
         float initTemp = FeaturesticCleanProofWatermark.getBatteryTemperatureCelsius(activity);
         int initBatt = FeaturesticCleanProofWatermark.getBatteryPercentage(activity);
-        headerTitle.setText(String.format(java.util.Locale.US, "Control  -  %.0f°C  %d%%", initTemp, initBatt));
+        headerTitle.setText(String.format(java.util.Locale.US, "Control  •  %.0f°C  %d%%", initTemp, initBatt));
 
         // Apple Style UI Size Adjuster: [ - ]  85%  [ + ] so user can shrink/enlarge menu on any screen!
         LinearLayout sizeControlPill = new LinearLayout(activity);
@@ -557,7 +557,7 @@ public final class FeaturesticOverlayManager {
         scrollContent.addView(createAppleCategorySection(
                 activity, 0, ICON_IPAD_VIEW, "#5E5CE6",
                 "Display & 120Hz Graphics",
-                "120Hz Frame Rate - Esports No-Shadow",
+                "120Hz Frame Rate • Esports No-Shadow",
                 sfSemibold, sfRegular, cat1Body, categoryBodies, categoryChevrons, true));
 
         // =========================================================================
@@ -573,7 +573,7 @@ public final class FeaturesticOverlayManager {
                 "#30D158",
                 "Hide ESP & Mod Name (Rec/SS)",
                 FeaturesticStreamproofEngine.isStreamproofEnabled()
-                        ? "Active - Invisible in Rec & Screenshot" : "Off - Visible in Rec & Screenshot",
+                        ? "Active • Invisible in Rec & Screenshot" : "Off • Visible in Rec & Screenshot",
                 FeaturesticStreamproofEngine.isStreamproofEnabled(),
                 sfMedium,
                 sfRegular,
@@ -582,8 +582,8 @@ public final class FeaturesticOverlayManager {
                     FeaturesticStreamproofEngine.setStreamproofEnabled(isChecked, activity);
                     if (streamproofSubRef[0] != null) {
                         streamproofSubRef[0].setText(isChecked
-                                ? "Active - Invisible in Rec & Screenshot"
-                                : "Off - Visible in Rec & Screenshot");
+                                ? "Active • Invisible in Rec & Screenshot"
+                                : "Off • Visible in Rec & Screenshot");
                     }
                     Toast.makeText(activity,
                             isChecked ? "Streamproof ON: ESP, Mod Name & Menu hidden from Rec/Screenshot!"
@@ -642,7 +642,7 @@ public final class FeaturesticOverlayManager {
                     controlSheet.setVisibility(View.GONE);
                     rootContainer.setVisibility(View.GONE);
                     Toast.makeText(activity,
-                            "HUD Completely Hidden - Press " + FeaturesticTouchAndGyroOptimizer.getShortcutShortHint() + " to open",
+                            "HUD Completely Hidden • Press " + FeaturesticTouchAndGyroOptimizer.getShortcutShortHint() + " to open",
                             Toast.LENGTH_LONG).show();
                 }));
         cat2Body.addView(createHairlineDivider(activity));
@@ -683,8 +683,8 @@ public final class FeaturesticOverlayManager {
                 "#30D158",
                 "Auto Crash & Log Cleaner",
                 com.featurestic.box.utils.compat.FeaturesticLogCleaner.isAutoLogCleanerEnabled()
-                        ? "Active - Auto-Wipes ANR, Bugly & .dmp Logs"
-                        : "Off - Crash Logs Not Wiped",
+                        ? "Active • Auto-Wipes ANR, Bugly & .dmp Logs"
+                        : "Off • Crash Logs Not Wiped",
                 com.featurestic.box.utils.compat.FeaturesticLogCleaner.isAutoLogCleanerEnabled(),
                 sfMedium,
                 sfRegular,
@@ -698,8 +698,8 @@ public final class FeaturesticOverlayManager {
                     }
                     if (logCleanSubRef[0] != null) {
                         logCleanSubRef[0].setText(isChecked
-                                ? "Active - Auto-Wipes ANR, Bugly & .dmp Logs"
-                                : "Off - Crash Logs Not Wiped");
+                                ? "Active • Auto-Wipes ANR, Bugly & .dmp Logs"
+                                : "Off • Crash Logs Not Wiped");
                     }
                     Toast.makeText(activity,
                             isChecked ? "Auto Crash & Log Cleaner ON (20s Sweep)" : "Auto Log Cleaner OFF",
@@ -716,8 +716,8 @@ public final class FeaturesticOverlayManager {
                 "#FF375F",
                 "Anti-Sniffer & Proxy Shield",
                 com.featurestic.box.utils.compat.NetworkSecurityGuard.isAntiSnifferEnabled()
-                        ? "Active - Blocks Reqable, HttpCanary & MITM"
-                        : "Off - Network Inspection Allowed",
+                        ? "Active • Blocks Reqable, HttpCanary & MITM"
+                        : "Off • Network Inspection Allowed",
                 com.featurestic.box.utils.compat.NetworkSecurityGuard.isAntiSnifferEnabled(),
                 sfMedium,
                 sfRegular,
@@ -726,8 +726,8 @@ public final class FeaturesticOverlayManager {
                     com.featurestic.box.utils.compat.NetworkSecurityGuard.setAntiSnifferEnabled(isChecked);
                     if (antiSniffSubRef[0] != null) {
                         antiSniffSubRef[0].setText(isChecked
-                                ? "Active - Blocks Reqable, HttpCanary & MITM"
-                                : "Off - Network Inspection Allowed");
+                                ? "Active • Blocks Reqable, HttpCanary & MITM"
+                                : "Off • Network Inspection Allowed");
                     }
                     Toast.makeText(activity,
                             isChecked ? "Anti-Sniffer & MITM Proxy Shield ON!" : "Anti-Sniffer Shield OFF",
@@ -738,7 +738,7 @@ public final class FeaturesticOverlayManager {
         scrollContent.addView(createAppleCategorySection(
                 activity, 1, ICON_STEALTH_EYE, "#30D158",
                 "Streamproof & Privacy",
-                "Hide ESP in Rec/SS - Clean Watermark",
+                "Hide ESP in Rec/SS • Clean Watermark",
                 sfSemibold, sfRegular, cat2Body, categoryBodies, categoryChevrons, false));
 
         // =========================================================================
@@ -755,8 +755,8 @@ public final class FeaturesticOverlayManager {
                 "#30D158",
                 "240Hz Touch & Zero-Delay Gyro",
                 FeaturesticTouchAndGyroOptimizer.isTouchAndGyroBoostEnabled()
-                        ? (hasHwGyro ? "Active - 0ms FIFO Fast Hardware Gyro" : "Active - 240Hz Unbuffered Touch")
-                        : "Off - Standard Input",
+                        ? (hasHwGyro ? "Active • 0ms FIFO Fast Hardware Gyro" : "Active • 240Hz Unbuffered Touch")
+                        : "Off • Standard Input",
                 FeaturesticTouchAndGyroOptimizer.isTouchAndGyroBoostEnabled(),
                 sfMedium,
                 sfRegular,
@@ -766,8 +766,8 @@ public final class FeaturesticOverlayManager {
                     FeaturesticTouchAndGyroOptimizer.engageZeroDelayHardwareGyro(activity, isChecked);
                     if (touchGyroSubRef[0] != null) {
                         touchGyroSubRef[0].setText(isChecked
-                                ? (hasHwGyro ? "Active - 0ms FIFO Fast Hardware Gyro" : "Active - 240Hz Unbuffered Touch")
-                                : "Off - Standard Input");
+                                ? (hasHwGyro ? "Active • 0ms FIFO Fast Hardware Gyro" : "Active • 240Hz Unbuffered Touch")
+                                : "Off • Standard Input");
                     }
                     Toast.makeText(activity,
                             isChecked ? (hasHwGyro ? "240Hz Touch + Zero-Delay Hardware Gyro ON!" : "240Hz Unbuffered Touch ON")
@@ -784,7 +784,7 @@ public final class FeaturesticOverlayManager {
                 "#FF9F0A",
                 "Footstep Audio Boost",
                 FeaturesticEsportsCoreEngines.isFootstepAudioBoostEnabled()
-                        ? "Active - 1.2-4kHz Clarity EQ" : "Off - Default Game Audio",
+                        ? "Active • 1.2–4kHz Clarity EQ" : "Off • Default Game Audio",
                 FeaturesticEsportsCoreEngines.isFootstepAudioBoostEnabled(),
                 sfMedium,
                 sfRegular,
@@ -793,7 +793,7 @@ public final class FeaturesticOverlayManager {
                     FeaturesticEsportsCoreEngines.setFootstepAudioBoostEnabled(isChecked);
                     if (footstepSubRef[0] != null) {
                         footstepSubRef[0].setText(isChecked
-                                ? "Active - 1.2-4kHz Clarity EQ" : "Off - Default Game Audio");
+                                ? "Active • 1.2–4kHz Clarity EQ" : "Off • Default Game Audio");
                     }
                 },
                 null));
@@ -806,7 +806,7 @@ public final class FeaturesticOverlayManager {
                 "#32ADE6",
                 "Thermal Frame Guard",
                 ThermalAndFrameGuard.isThermalGuardEnabled()
-                        ? "Active - Blocks Thermal Drops" : "Off - OS Default",
+                        ? "Active • Blocks Thermal Drops" : "Off • OS Default",
                 ThermalAndFrameGuard.isThermalGuardEnabled(),
                 sfMedium,
                 sfRegular,
@@ -816,7 +816,7 @@ public final class FeaturesticOverlayManager {
                     if (isChecked) ThermalAndFrameGuard.applyToActivityWindow(activity);
                     if (thermalSubRef[0] != null) {
                         thermalSubRef[0].setText(isChecked
-                                ? "Active - Blocks Thermal Drops" : "Off - OS Default");
+                                ? "Active • Blocks Thermal Drops" : "Off • OS Default");
                     }
                 },
                 null));
@@ -829,7 +829,7 @@ public final class FeaturesticOverlayManager {
                 "#FF375F",
                 "Claw Notification Guard",
                 FeaturesticEsportsCoreEngines.isClawEdgeGuardEnabled()
-                        ? "Active - Edge Pull-Down Locked" : "Off - Normal Status Bar",
+                        ? "Active • Edge Pull-Down Locked" : "Off • Normal Status Bar",
                 FeaturesticEsportsCoreEngines.isClawEdgeGuardEnabled(),
                 sfMedium,
                 sfRegular,
@@ -839,7 +839,7 @@ public final class FeaturesticOverlayManager {
                     if (isChecked) FeaturesticEsportsCoreEngines.enforceImmersiveClawGuard(activity);
                     if (clawSubRef[0] != null) {
                         clawSubRef[0].setText(isChecked
-                                ? "Active - Edge Pull-Down Locked" : "Off - Normal Status Bar");
+                                ? "Active • Edge Pull-Down Locked" : "Off • Normal Status Bar");
                     }
                 },
                 null));
@@ -873,7 +873,7 @@ public final class FeaturesticOverlayManager {
         scrollContent.addView(createAppleCategorySection(
                 activity, 2, ICON_TOUCH_GYRO, "#FF9F0A",
                 "Touch, Zero-Delay Gyro & Audio",
-                "240Hz Touch - Fast Gyro - Footstep EQ",
+                "240Hz Touch • Fast Gyro • Footstep EQ",
                 sfSemibold, sfRegular, cat3Body, categoryBodies, categoryChevrons, false));
 
         // =========================================================================
@@ -888,7 +888,7 @@ public final class FeaturesticOverlayManager {
                 ICON_NET_TURBO,
                 "#64D2FF",
                 "Net Turbo & Dual-SIM",
-                "Active - Wi-Fi Low-Latency Lock",
+                "Active • Wi-Fi Low-Latency Lock",
                 true,
                 sfMedium,
                 sfRegular,
@@ -896,7 +896,7 @@ public final class FeaturesticOverlayManager {
                 isChecked -> {
                     if (isChecked) {
                         NetworkLowLatencyOptimizer.boostAndWarmNow(activity);
-                        if (netSubRef[0] != null) netSubRef[0].setText("Active - Wi-Fi Low-Latency Lock");
+                        if (netSubRef[0] != null) netSubRef[0].setText("Active • Wi-Fi Low-Latency Lock");
                     } else if (netSubRef[0] != null) {
                         netSubRef[0].setText("Standard Network Mode");
                     }
@@ -965,7 +965,7 @@ public final class FeaturesticOverlayManager {
                 "#BF5AF2",
                 "Anti-Disconnect Shield",
                 FeaturesticEsportsCoreEngines.isAntiDisconnectShieldEnabled()
-                        ? "Active - Prevents Background Kick" : "Off - Normal Background",
+                        ? "Active • Prevents Background Kick" : "Off • Normal Background",
                 FeaturesticEsportsCoreEngines.isAntiDisconnectShieldEnabled(),
                 sfMedium,
                 sfRegular,
@@ -974,7 +974,7 @@ public final class FeaturesticOverlayManager {
                     FeaturesticEsportsCoreEngines.setAntiDisconnectShieldEnabled(isChecked);
                     if (keepAliveSubRef[0] != null) {
                         keepAliveSubRef[0].setText(isChecked
-                                ? "Active - Prevents Background Kick" : "Off - Normal Background");
+                                ? "Active • Prevents Background Kick" : "Off • Normal Background");
                     }
                 },
                 null));
@@ -982,7 +982,7 @@ public final class FeaturesticOverlayManager {
         scrollContent.addView(createAppleCategorySection(
                 activity, 3, ICON_NET_TURBO, "#64D2FF",
                 "Network, Gaming DNS & Region",
-                "1.1.1.1 DNS - PUBG KR Region - Net Turbo",
+                "1.1.1.1 DNS • PUBG KR Region • Net Turbo",
                 sfSemibold, sfRegular, cat4Body, categoryBodies, categoryChevrons, false));
 
         // =========================================================================
@@ -1020,8 +1020,8 @@ public final class FeaturesticOverlayManager {
                 "#BF5AF2",
                 "GG Anti-Kill Memory Lock",
                 com.featurestic.box.utils.compat.FeaturesticMemoryLockGuard.isMemoryLockEnabled()
-                        ? "Active - Foreground Priority & LMK Shield"
-                        : "Off - Standard OS Background Priority",
+                        ? "Active • Foreground Priority & LMK Shield"
+                        : "Off • Standard OS Background Priority",
                 com.featurestic.box.utils.compat.FeaturesticMemoryLockGuard.isMemoryLockEnabled(),
                 sfMedium,
                 sfRegular,
@@ -1030,8 +1030,8 @@ public final class FeaturesticOverlayManager {
                     com.featurestic.box.utils.compat.FeaturesticMemoryLockGuard.setMemoryLockEnabled(isChecked);
                     if (ggLockSubRef[0] != null) {
                         ggLockSubRef[0].setText(isChecked
-                                ? "Active - Foreground Priority & LMK Shield"
-                                : "Off - Standard OS Background Priority");
+                                ? "Active • Foreground Priority & LMK Shield"
+                                : "Off • Standard OS Background Priority");
                     }
                     Toast.makeText(activity,
                             isChecked ? "GG Anti-Kill Memory Lock ON!" : "GG Memory Lock OFF",
@@ -1046,7 +1046,7 @@ public final class FeaturesticOverlayManager {
                 ICON_SWITCH_ID,
                 "#5E5CE6",
                 "Switch Parallel Account Slot",
-                "Active: Slot " + slotId + " - Tap for Next Slot (Zero-Copy OBB)",
+                "Active: Slot " + slotId + " • Tap for Next Slot (Zero-Copy OBB)",
                 sfMedium,
                 sfRegular,
                 v -> {
@@ -1080,7 +1080,7 @@ public final class FeaturesticOverlayManager {
                 ICON_GUEST_RESET,
                 "#0A84FF",
                 "Reset Guest Account",
-                "New Guest ID - Keep Maps & OBB",
+                "New Guest ID • Keep Maps & OBB",
                 sfMedium,
                 sfRegular,
                 v -> {
@@ -1148,7 +1148,7 @@ public final class FeaturesticOverlayManager {
         scrollContent.addView(createAppleCategorySection(
                 activity, 4, ICON_SWITCH_ID, "#0A84FF",
                 "Accounts, Slots & Companion Tool",
-                "1-Click GG/Tool - Multi-Slot - Social ID",
+                "1-Click GG/Tool • Multi-Slot • Social ID",
                 sfSemibold, sfRegular, cat5Body, categoryBodies, categoryChevrons, false));
 
         scrollView.addView(scrollContent);
@@ -1183,7 +1183,7 @@ public final class FeaturesticOverlayManager {
                         FeaturesticAutopilotEngine.onLiveFpsSample(activity, fps);
                         int pingMs = LivePingMonitor.getCurrentPingMs();
                         float liveTempC = FeaturesticCleanProofWatermark.getBatteryTemperatureCelsius(activity);
-                        telemetryText.setText(fps + " FPS - " + pingMs + "ms - " + Math.round(liveTempC) + "°C");
+                        telemetryText.setText(fps + " FPS • " + pingMs + "ms • " + Math.round(liveTempC) + "°C");
                         FeaturesticCleanProofWatermark.onLiveTelemetryTick(activity, fps, pingMs);
                         ThermalAndFrameGuard.onThermalTelemetryTick(activity, liveTempC, fps);
 

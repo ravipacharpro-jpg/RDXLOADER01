@@ -31,7 +31,7 @@ import com.featurestic.box.FeaturesticBoxCore;
 import com.featurestic.box.app.BActivityThread;
 
 /**
- * End-to-End Google Sign-In & Play Games Authentication Engine for Android 10-16.
+ * End-to-End Google Sign-In & Play Games Authentication Engine for Android 10–16.
  *
  * Solves all 4 causes of Google Sign-In failure in virtual containers:
  * 1. Clones SignInConfiguration via Parcel before outbound normalization so
@@ -40,8 +40,8 @@ import com.featurestic.box.app.BActivityThread;
  *    serverClientId on the outbound GMS Intent so real GoogleSignInChimeraActivity
  *    performs standard email/profile authentication (which succeeds for any APK SHA-1
  *    and opens the native Gmail Account Picker).
- * 3. Supports both legacy ClientTransaction.mActivityCallbacks (Android 9-14) and
- *    modern ClientTransaction.mTransactionItems / getTransactionItems() (Android 14 QPR2-16).
+ * 3. Supports both legacy ClientTransaction.mActivityCallbacks (Android 9–14) and
+ *    modern ClientTransaction.mTransactionItems / getTransactionItems() (Android 14 QPR2–16).
  * 4. Restores the original requested Scopes, populates idToken & serverAuthCode, and
  *    synthesizes a fallback SignInAccount from the device's Google account if GMS
  *    returns DEVELOPER_ERROR (10) or SIGN_IN_FAILED (12500).
@@ -70,6 +70,7 @@ public final class GoogleSignInTokenHelper {
     private static volatile String sLastWebGivenName;
     private static volatile String sLastWebFamilyName;
     private static volatile String sLastWebPhotoUrl;
+    private static volatile long sLastWebTokenTimestampMs;
 
     private GoogleSignInTokenHelper() {
     }
@@ -264,7 +265,7 @@ public final class GoogleSignInTokenHelper {
     }
 
     /**
-     * Extracts ClientTransaction items across Android 9-16, supporting both
+     * Extracts ClientTransaction items across Android 9–16, supporting both
      * legacy mActivityCallbacks and Android 14 QPR2 / 15 / 16 mTransactionItems.
      */
     @SuppressWarnings("unchecked")
@@ -373,13 +374,16 @@ public final class GoogleSignInTokenHelper {
             }
 
             // 40962 (0xA002) is SignInHubActivity's request code for GOOGLE_SIGN_IN
+            boolean hasRecentMicroGToken = sLastWebIdToken != null
+                    && !sLastWebIdToken.isEmpty()
+                    && (System.currentTimeMillis() - sLastWebTokenTimestampMs) < 30000L;
             boolean isExplicitCancel = false;
             if (resultCode == Activity.RESULT_CANCELED) {
-                if (data == null || (!data.hasExtra(EXTRA_WEB_EMAIL) && !data.hasExtra("signInAccount"))) {
+                int err = data != null ? data.getIntExtra("errorCode", 0) : 0;
+                if (err == 16 || err == 12501) {
                     isExplicitCancel = true;
-                } else {
-                    int err = data.getIntExtra("errorCode", 0);
-                    if (err == 16 || err == 12501) {
+                } else if (data == null || (!data.hasExtra(EXTRA_WEB_EMAIL) && !data.hasExtra("signInAccount"))) {
+                    if (!hasRecentMicroGToken) {
                         isExplicitCancel = true;
                     }
                 }
@@ -390,12 +394,12 @@ public final class GoogleSignInTokenHelper {
                 return;
             }
 
-            if (data == null && requestCode == 40962) {
+            if (data == null && (requestCode == 40962 || hasRecentMicroGToken)) {
                 data = new Intent();
                 dataField.set(resultInfo, data);
             }
             if (data != null) {
-                boolean modified = enrichSignInResultIntent(data, requestCode == 40962);
+                boolean modified = enrichSignInResultIntent(data, requestCode == 40962 || hasRecentMicroGToken);
                 if (modified && codeField != null) {
                     codeField.setInt(resultInfo, Activity.RESULT_OK);
                     Log.d(TAG, "Enriched Google Sign-In result to RESULT_OK for req=" + requestCode);
@@ -440,6 +444,9 @@ public final class GoogleSignInTokenHelper {
                 sLastWebGivenName = data.getStringExtra(EXTRA_WEB_GIVEN_NAME);
                 sLastWebFamilyName = data.getStringExtra(EXTRA_WEB_FAMILY_NAME);
                 sLastWebPhotoUrl = data.getStringExtra(EXTRA_WEB_PHOTO_URL);
+                if (sLastWebIdToken != null && !sLastWebIdToken.isEmpty()) {
+                    sLastWebTokenTimestampMs = System.currentTimeMillis();
+                }
             }
             if (data.hasExtra("authAccount")) {
                 String em = data.getStringExtra("authAccount");

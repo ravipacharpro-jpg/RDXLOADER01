@@ -184,12 +184,12 @@ public final class FeaturesticCleanProofWatermark {
                 return "ROG GAME GENIE  |  " + fps + " FPS  |  " + pingMs + "ms  |  " + tempStr;
             case STYLE_APPLE_METAL_HUD:
                 float frameMs = fps > 0 ? (1000f / fps) : 8.3f;
-                return String.format(Locale.US, "Metal HUD  -  %d FPS (%.1f ms)  -  %dms", fps, frameMs, pingMs);
+                return String.format(Locale.US, "Metal HUD  •  %d FPS (%.1f ms)  •  %dms", fps, frameMs, pingMs);
             case STYLE_CUSTOM_TEXT:
                 if (sCustomWatermarkText != null && !sCustomWatermarkText.isEmpty()) {
-                    return sCustomWatermarkText + "  -  " + fps + " FPS  -  " + pingMs + "ms";
+                    return sCustomWatermarkText + "  •  " + fps + " FPS  •  " + pingMs + "ms";
                 }
-                return "VERIFIED DEVICE  -  " + fps + " FPS  -  " + pingMs + "ms  -  " + tempStr;
+                return "VERIFIED DEVICE  •  " + fps + " FPS  •  " + pingMs + "ms  •  " + tempStr;
             case STYLE_OEM_FPS_COUNTER:
             default:
                 return "FPS: " + fps + "   PING: " + pingMs + "ms   TEMP: " + tempStr;

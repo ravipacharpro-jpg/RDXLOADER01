@@ -35,7 +35,7 @@ import com.featurestic.box.utils.FileUtils;
  * Features:
  * 1. Smart ETag / Content-Length caching (only re-downloads when you update the .so on your server).
  * 2. Strict ELF Header (ELF) & ABI Bitness (32-bit vs 64-bit) verification before replacing
- *    the active .so - if internet drops or server returns a 404 HTML page, it is rejected safely
+ *    the active .so — if internet drops or server returns a 404 HTML page, it is rejected safely
  *    so the game never crashes!
  * 3. Automatic Android 14-16 (API 34-36) compliant read-only executable permissions (0555) and
  *    automatic injection via RNative.loadExternalPlugin().

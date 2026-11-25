@@ -16,7 +16,7 @@ import android.view.animation.LinearInterpolator;
 /**
  * Custom Vector/Canvas 3D Folded-Ribbon "F" Emblem View for the Featurestic SDK Launch Screen.
  * Renders the exact 3D folded neon ribbon "F" (Electric Magenta -> Violet -> Royal Blue -> Aqua Cyan)
- * with dual ambient neon glows and a subtle specular edge shimmer - zero bitmap/photo artifacts.
+ * with dual ambient neon glows and a subtle specular edge shimmer — zero bitmap/photo artifacts.
  */
 public class FeaturesticRibbonFLogoView extends View {
 

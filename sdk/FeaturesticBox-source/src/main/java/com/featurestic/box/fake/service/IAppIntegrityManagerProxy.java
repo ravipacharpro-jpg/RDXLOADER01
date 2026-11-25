@@ -33,7 +33,7 @@ public class IAppIntegrityManagerProxy extends BinderInvocationStub {
 
     @Override
     protected void inject(Object baseInvocation, Object proxyInvocation) {
-        // Always replace -> some ROM send null proxy
+        // Always replace → some ROM send null proxy
         replaceSystemService(SERVER_NAME);
     }
 

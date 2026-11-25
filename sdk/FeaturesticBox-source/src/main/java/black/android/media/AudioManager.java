@@ -9,15 +9,15 @@ import top.niunaijun.blackreflection.annotation.BStaticMethod;
 
 @BClassName("android.media.AudioManager")
 public interface AudioManager {
-    // OK Android 9-10: Direct service access
+    // ✅ Android 9-10: Direct service access
     @BStaticField
     IInterface sService();
 
-    // OK Android 11+: Context-based service binding
+    // ✅ Android 11+: Context-based service binding
     @BStaticMethod
     Object getService(Context context);
 
-    // OK Android 12+ compatibility (e.g., for audio focus changes)
+    // ✅ Android 12+ compatibility (e.g., for audio focus changes)
     @BStaticMethod
     boolean isStreamMute(int streamType);
 }

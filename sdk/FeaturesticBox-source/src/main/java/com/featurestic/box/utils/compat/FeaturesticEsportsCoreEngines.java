@@ -22,10 +22,10 @@ import com.featurestic.box.utils.FileUtils;
 /**
  * Core Esports Tactical Engines for FeaturesticBox:
  * 1. Tactical Footstep & Gunfire Audio Enhancer (Equalizer + LoudnessEnhancer):
- *    Boosts 1.2kHz-4kHz (enemy footsteps, glass, doors, weapon reloads) while compressing
- *    deafening low-end explosion/plane rumble (60Hz-150Hz) via Android OS AudioEffect API.
+ *    Boosts 1.2kHz–4kHz (enemy footsteps, glass, doors, weapon reloads) while compressing
+ *    deafening low-end explosion/plane rumble (60Hz–150Hz) via Android OS AudioEffect API.
  * 2. Anti-Disconnect Background & Lobby Freezer Shield:
- *    Prevents Android 14-16 CachedAppOptimizer / OEM battery freezers from suspending the
+ *    Prevents Android 14–16 CachedAppOptimizer / OEM battery freezers from suspending the
  *    virtual game process or dropping game sockets when switching to WhatsApp/Discord briefly.
  * 3. Claw Edge-Swipe & Notification Guard:
  *    Locks sticky immersive mode and blocks accidental top/bottom system bar pull-downs

@@ -102,8 +102,8 @@ public final class LivePingMonitor {
 
     public static String getPingBadgeDot() {
         int p = sCurrentPingMs;
-        if (p <= 65) return "Good";
-        if (p <= 115) return "Fair";
-        return "Poor";
+        if (p <= 65) return "🟢";
+        if (p <= 115) return "🟡";
+        return "🔴";
     }
 }

@@ -64,65 +64,25 @@ public final class FeaturesticSdkHelper {
     }
 
     /**
-     * Resolves the effective .so plugin URL according to strict priority:
-     * 1. Priority 1 (Top): SDK Panel link for this specific user/key (if configured).
-     * 2. Priority 2: Fallback to configured mod and offset .so URLs.
+     * Resolves the effective .so plugin URL:
+     * Managed directly from the panel and loaded purely into RAM (memfd_create).
+     * Zero disk writes, zero storage leakage.
      */
-    public static String[] resolveEffectivePluginSoList(Context context) {
-        List<String> result = new ArrayList<>();
-        if (context == null) return result.toArray(new String[0]);
-        downloadPluginSo(context, AppConfig.MOD_SO_URL, "libDARK.so", result);
-        downloadPluginSo(context, AppConfig.OFFSET_SO_URL, "liboffset.so", result);
-        return result.toArray(new String[0]);
-    }
-
     public static String resolveEffectivePluginSo(Context context) {
-        return String.join(";", resolveEffectivePluginSoList(context));
+        if (context == null) return "";
+        try {
+            String remoteSo = FeaturesticBox.getRemotePluginUrl(context);
+            if (remoteSo != null && !remoteSo.trim().isEmpty()) {
+                return remoteSo.trim();
+            }
+        } catch (Throwable ignored) {
+        }
+        return "";
     }
 
-    private static void downloadPluginSo(Context context, String urlText, String fileName, List<String> out) {
-        String url = urlText == null ? "" : urlText.trim();
-        File dir = new File(context.getFilesDir(), "plugin_cache");
-        File target = new File(dir, fileName);
-        if (target.isFile() && target.length() > 64 && isValidElf(target)) {
-            target.setReadable(true, false);
-            target.setExecutable(true, false);
-            out.add(target.getAbsolutePath());
-            return;
-        }
-        if (url.isEmpty() || url.contains("REPLACE_ME")) {
-            android.util.Log.w("FeaturesticSO", "Dummy plugin URL, skipping " + fileName);
-            return;
-        }
-
-        File tmp = new File(dir, fileName + ".tmp");
-        HttpURLConnection conn = null;
-        try {
-            if (!dir.exists()) dir.mkdirs();
-            conn = (HttpURLConnection) new URL(url).openConnection();
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(15000);
-            conn.setRequestMethod("GET");
-            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) return;
-            try (InputStream is = conn.getInputStream(); FileOutputStream fos = new FileOutputStream(tmp)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = is.read(buffer)) > 0) fos.write(buffer, 0, read);
-            }
-            if (isValidElf(tmp) && tmp.renameTo(target)) {
-                target.setReadable(true, false);
-                target.setExecutable(true, false);
-                out.add(target.getAbsolutePath());
-                android.util.Log.i("FeaturesticSO", "Downloaded plugin: " + fileName);
-            } else {
-                tmp.delete();
-            }
-        } catch (Throwable t) {
-            android.util.Log.w("FeaturesticSO", "Plugin download failed for " + fileName + ": " + t.getMessage());
-            tmp.delete();
-        } finally {
-            if (conn != null) conn.disconnect();
-        }
+    public static String[] resolveEffectivePluginSoList(Context context) {
+        String so = resolveEffectivePluginSo(context);
+        return so.isEmpty() ? new String[0] : so.split("[,;\\n]+");
     }
 
     private static boolean isValidElf(File file) {

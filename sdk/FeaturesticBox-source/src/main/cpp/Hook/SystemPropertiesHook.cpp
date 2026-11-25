@@ -12,8 +12,6 @@
 #include <cstring>
 #include <atomic>
 
-namespace {
-
 static std::map<std::string, std::string> sPropMap;
 static std::mutex sPropMutex;
 static std::atomic<bool> sNativeHooksInstalled{false};
@@ -36,7 +34,7 @@ static bool isQemuOrVirtualProp(const char *name) {
     return false;
 }
 
-static int safe_system_property_get(const char *name, char *value) {
+extern "C" int safe_system_property_get(const char *name, char *value) {
     if (name == nullptr || name[0] == '\0' || value == nullptr) {
         if (value) value[0] = '\0';
         return 0;
@@ -86,19 +84,33 @@ static int safe_system_property_get(const char *name, char *value) {
         }
     }
 
+    if (sOrigSystemPropertyGet == nullptr) {
+        void *sym = dlsym(RTLD_DEFAULT, "__system_property_get");
+        if (sym != nullptr) {
+            sOrigSystemPropertyGet = reinterpret_cast<int (*)(const char *, char *)>(sym);
+        }
+    }
+
     if (sOrigSystemPropertyGet != nullptr) {
         return sOrigSystemPropertyGet(name, value);
     }
     return 0;
 }
 
-static const prop_info *safe_system_property_find(const char *name) {
+extern "C" const prop_info *safe_system_property_find(const char *name) {
     if (name == nullptr || name[0] == '\0') {
         return nullptr;
     }
 
     if (isQemuOrVirtualProp(name)) {
         return nullptr;
+    }
+
+    if (sOrigSystemPropertyFind == nullptr) {
+        void *sym = dlsym(RTLD_DEFAULT, "__system_property_find");
+        if (sym != nullptr) {
+            sOrigSystemPropertyFind = reinterpret_cast<const prop_info *(*)(const char *)>(sym);
+        }
     }
 
     if (sOrigSystemPropertyFind != nullptr) {
@@ -168,7 +180,7 @@ HOOK_JNI(jstring, native_get, JNIEnv *env, jobject obj, jstring key, jstring def
     return orig_native_get(env, obj, key, def);
 }
 
-} // anonymous namespace
+
 
 void SystemPropertiesHook::setProp(const char *key, const char *value) {
     if (key != nullptr && value != nullptr) {
@@ -207,22 +219,18 @@ void SystemPropertiesHook::init(JNIEnv *env) {
         );
     }
 
-    // 2. Hook Native libc __system_property_get and __system_property_find via A64HookFunction
+    // 2. Resolve Native libc __system_property_get and __system_property_find without inline hook
     if (!sNativeHooksInstalled.exchange(true)) {
 #if defined(__aarch64__)
         void *getSym = dlsym(RTLD_DEFAULT, "__system_property_get");
         if (getSym != nullptr) {
-            A64HookFunction(getSym,
-                            reinterpret_cast<void *>(safe_system_property_get),
-                            reinterpret_cast<void **>(&sOrigSystemPropertyGet));
-            ALOGI("SystemPropertiesHook: Hooked native __system_property_get");
+            sOrigSystemPropertyGet = reinterpret_cast<int (*)(const char *, char *)>(getSym);
+            ALOGI("SystemPropertiesHook: Resolved native __system_property_get (zero inline hook)");
         }
         void *findSym = dlsym(RTLD_DEFAULT, "__system_property_find");
         if (findSym != nullptr) {
-            A64HookFunction(findSym,
-                            reinterpret_cast<void *>(safe_system_property_find),
-                            reinterpret_cast<void **>(&sOrigSystemPropertyFind));
-            ALOGI("SystemPropertiesHook: Hooked native __system_property_find");
+            sOrigSystemPropertyFind = reinterpret_cast<const prop_info *(*)(const char *)>(findSym);
+            ALOGI("SystemPropertiesHook: Resolved native __system_property_find (zero inline hook)");
         }
 #endif
     }

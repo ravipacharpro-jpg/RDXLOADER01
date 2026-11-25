@@ -9,21 +9,21 @@ import top.niunaijun.blackreflection.annotation.BStaticMethod;
 @BClassName("android.media.IAudioService")
 public interface IAudioService {
 
-    // OK Stub for binder compatibility
+    // ✅ Stub for binder compatibility
     @BClassName("android.media.IAudioService$Stub")
     interface Stub {
         @BStaticMethod
         IInterface asInterface(IBinder binder);
     }
 
-    // OK Android 9-16: Standard IAudioService interface
+    // ✅ Android 9-16: Standard IAudioService interface
     @BStaticMethod
     void setMicrophoneMute(boolean mute, String callingPackage, int userId);
 
     @BStaticMethod
     boolean isMicrophoneMute();
 
-    // OK Android 10+: Bluetooth SCO methods
+    // ✅ Android 10+: Bluetooth SCO methods
     @BStaticMethod
     void startBluetoothSco(String callingPackage);
 

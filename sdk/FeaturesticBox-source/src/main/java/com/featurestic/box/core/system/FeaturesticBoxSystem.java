@@ -93,7 +93,7 @@ public class FeaturesticBoxSystem {
             InputStream junit = FeaturesticBoxCore.getContext().getAssets().open("junit.jar");
             FileUtils.copyFile(junit,android.MetaCore.RemoteManager.JUNIT_JAR);
         } catch (Throwable ignored) {
-            // junit.jar not present -> safe to ignore
+            // junit.jar not present → safe to ignore
         }
 
         // REQUIRED: empty.jar

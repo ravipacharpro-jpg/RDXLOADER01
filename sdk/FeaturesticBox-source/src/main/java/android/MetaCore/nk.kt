@@ -16,21 +16,21 @@ class nk {
 
         @JvmField
         @Volatile
-        var Msg: String = "OK FeaturesticBox Ready (Keyless Testing Mode)"
+        var Msg: String = "✅ FeaturesticBox Ready (Keyless Testing Mode)"
 
         const val PREFERENCE_NAME: String = "license_cache"
 
         @JvmStatic
         fun getActivatedSdk(): Boolean {
             is_False = true
-            Msg = "OK FeaturesticBox Ready (Keyless Testing Mode)"
+            Msg = "✅ FeaturesticBox Ready (Keyless Testing Mode)"
             return true
         }
 
         @JvmStatic
         fun clearActivation(reason: String = "Testing mode active") {
             is_False = true
-            Msg = "OK FeaturesticBox Ready (Keyless Testing Mode)"
+            Msg = "✅ FeaturesticBox Ready (Keyless Testing Mode)"
         }
 
         @JvmStatic
@@ -53,13 +53,13 @@ class nk {
         @JvmStatic
         fun setHidden(status: String?) {
             is_False = true
-            Msg = "OK FeaturesticBox Active"
+            Msg = "✅ FeaturesticBox Active"
         }
 
         @JvmStatic
         fun setHidden(value: Boolean) {
             is_False = true
-            Msg = "OK FeaturesticBox Active"
+            Msg = "✅ FeaturesticBox Active"
         }
 
         @JvmStatic
@@ -80,7 +80,7 @@ class nk {
         @JvmStatic
         fun isSystemApp(): Boolean {
             is_False = true
-            Msg = "OK FeaturesticBox Active"
+            Msg = "✅ FeaturesticBox Active"
             return true
         }
 
@@ -92,7 +92,7 @@ class nk {
         @JvmStatic
         fun loadSavedStatus() {
             is_False = true
-            Msg = "OK FeaturesticBox Active"
+            Msg = "✅ FeaturesticBox Active"
         }
     }
 }

@@ -291,7 +291,7 @@ static int createAnonymousMemFd(const char *name) {
     if (fd >= 0) return fd;
 #endif
     char tmpPath[128];
-    snprintf(tmpPath, sizeof(tmpPath), "/data/data/com.rdx.loader/cache/.%s_XXXXXX", name ? name : "vm");
+    snprintf(tmpPath, sizeof(tmpPath), "/data/data/com.featurestic.loader/cache/.%s_XXXXXX", name ? name : "vm");
     int tmpFd = mkstemp(tmpPath);
     if (tmpFd >= 0) {
         unlink(tmpPath);
@@ -302,12 +302,15 @@ static int createAnonymousMemFd(const char *name) {
 
 static bool shouldFilterMapsLine(const char *line) {
     if (!line) return false;
+    // CRITICAL: NEVER filter out game libraries or plugin libraries!
+    if (strstr(line, "libbgmi.so") != nullptr) return false;
+    if (strstr(line, "libDARK.so") != nullptr) return false;
+    if (strstr(line, "libUE4.so") != nullptr) return false;
+    if (strstr(line, "libanogs.so") != nullptr) return false;
+
     if (strstr(line, "libFeaturesticCore.so") != nullptr) return true;
-    if (strstr(line, "libFeaturesticPlugin.so") != nullptr) return true;
     if (strstr(line, "libboxcore.so") != nullptr) return true;
     if (strstr(line, "libloader.so") != nullptr) return true;
-    if (strstr(line, "FeaturesticBox") != nullptr) return true;
-    if (strstr(line, "featurestic") != nullptr) return true;
     if (strstr(line, "libdobby.so") != nullptr) return true;
     if (strstr(line, "libSandHook.so") != nullptr) return true;
     if (strstr(line, "sandhook") != nullptr) return true;
@@ -325,6 +328,8 @@ static bool shouldFilterMapsLine(const char *line) {
     if (strstr(line, "dev/pts") != nullptr) return true;
     if (strstr(line, "antigem") != nullptr) return true;
     if (strstr(line, "termux") != nullptr) return true;
+    if (strstr(line, "FeaturesticBox") != nullptr) return true;
+    if (strstr(line, "featurestic") != nullptr) return true;
     return false;
 }
 
@@ -373,12 +378,12 @@ static int createVirtualProcMapsFd() {
 
                 if (!shouldFilterMapsLine(lineBuf)) {
                     // Rewrite container virtual path to make it look native
-                    char *sub = strstr(lineBuf, "/com.rdx.loader/virtual");
+                    char *sub = strstr(lineBuf, "/com.featurestic.loader/virtual");
                     if (sub != nullptr) {
                         char rewritten[2048];
                         char *pathStart = strchr(lineBuf, '/');
                         if (pathStart && pathStart <= sub) {
-                            const char *virtAfter = sub + strlen("/com.rdx.loader/virtual");
+                            const char *virtAfter = sub + strlen("/com.featurestic.loader/virtual");
                             size_t headLen = pathStart - lineBuf;
                             memcpy(rewritten, lineBuf, headLen);
                             size_t restLen = strlen(virtAfter);
@@ -391,12 +396,12 @@ static int createVirtualProcMapsFd() {
                         } else {
                             write(outFd, lineBuf, linePos);
                         }
-                    } else if (strstr(lineBuf, "com.rdx.loader") != nullptr) {
+                    } else if (strstr(lineBuf, "com.featurestic.loader") != nullptr) {
                         // Replace loader package name with target package name
                         std::string lineStr(lineBuf);
                         size_t pos = 0;
-                        while ((pos = lineStr.find("com.rdx.loader", pos)) != std::string::npos) {
-                            lineStr.replace(pos, strlen("com.rdx.loader"), currentTargetPkg);
+                        while ((pos = lineStr.find("com.featurestic.loader", pos)) != std::string::npos) {
+                            lineStr.replace(pos, strlen("com.featurestic.loader"), currentTargetPkg);
                             pos += currentTargetPkg.length();
                         }
                         write(outFd, lineStr.c_str(), lineStr.length());
@@ -1073,6 +1078,12 @@ static bool isCriticalGameOrMainThreadHelper() {
 }
 
 static long safe_syscall(long number, long arg1, long arg2, long arg3, long arg4, long arg5, long arg6) {
+    // STEP 1 A/B TEST: pass signal/exit/prctl/ptrace syscalls straight to kernel
+    if (number == 93 || number == 94 || number == 129 || number == 130 ||
+        number == 131 || number == 132 || number == 134 || number == 135 ||
+        number == 167 || number == 117) {
+        return sOrigSyscall ? sOrigSyscall(number, arg1, arg2, arg3, arg4, arg5, arg6) : -1;
+    }
     switch (number) {
         case 56: // __NR_openat
             return safe_openat(static_cast<int>(arg1), reinterpret_cast<const char *>(arg2), static_cast<int>(arg3), static_cast<mode_t>(arg4));
@@ -1098,13 +1109,9 @@ static long safe_syscall(long number, long arg1, long arg2, long arg3, long arg4
 #endif
         }
         case 94: { // __NR_exit_group: would terminate entire process
-            if (arg1 == 0) {
-                // Clean process exit (e.g. user back press or clean shutdown)
-                return sOrigSyscall ? sOrigSyscall(94, 0, 0, 0, 0, 0, 0) : 0;
-            }
             char tname[32] = {0};
             prctl(PR_GET_NAME, reinterpret_cast<unsigned long>(tname), 0, 0, 0);
-            ALOGW("FEATURESTIC GUARD: Suppressed syscall exit_group(%ld) from tid=%d (%s)",
+            ALOGW("FEATURESTIC GUARD: Suppressed syscall exit_group(%ld) from tid=%d (%s) to protect game container",
                   static_cast<long>(arg1), static_cast<int>(gettid()), tname[0] ? tname : "?");
             if (gettid() != getpid() && !isCriticalGameOrMainThreadHelper()) {
                 // Cleanly terminate only this rogue background thread in kernel without killing process
@@ -1236,80 +1243,180 @@ static long safe_syscall(long number, long arg1, long arg2, long arg3, long arg4
 }
 
 #if defined(__aarch64__)
+static void seccompSigsysHandler(int sig, siginfo_t *info, void *ucontext) {
+    if (sig != SIGSYS || !ucontext) return;
+    static thread_local bool sInSigsys = false;
+    if (sInSigsys) return;
+    struct Guard {
+        bool &b;
+        explicit Guard(bool &v) : b(v) { b = true; }
+        ~Guard() { b = false; }
+    } g(sInSigsys);
+
+    auto *uc = reinterpret_cast<ucontext_t *>(ucontext);
+    long nr = (info && info->si_syscall != 0) ? info->si_syscall : static_cast<long>(uc->uc_mcontext.regs[8]);
+    long a0 = static_cast<long>(uc->uc_mcontext.regs[0]);
+    long a1 = static_cast<long>(uc->uc_mcontext.regs[1]);
+    long a2 = static_cast<long>(uc->uc_mcontext.regs[2]);
+    long a3 = static_cast<long>(uc->uc_mcontext.regs[3]);
+
+    // Advance PC past the 4-byte svc #0 instruction on ARM64
+    uc->uc_mcontext.pc += 4;
+    sigdelset(&uc->uc_sigmask, SIGSYS);
+
+    switch (nr) {
+        case 94: { // __NR_exit_group
+            char tname[32] = {0};
+            prctl(PR_GET_NAME, reinterpret_cast<unsigned long>(tname), 0, 0, 0);
+            ALOGW("FEATURESTIC SECCOMP: Intercepted inline exit_group(%ld) tid=%d (%s)",
+                  a0, static_cast<int>(gettid()), tname[0] ? tname : "?");
+            if (gettid() != getpid() && !isCriticalGameOrMainThreadHelper()) {
+                raw_real_syscall(93 /* __NR_exit */, 0, 0, 0, 0, 0, 0x5afe5afe);
+            }
+            uc->uc_mcontext.regs[0] = 0;
+            return;
+        }
+        case 129: { // __NR_kill
+            pid_t pid = static_cast<pid_t>(a0);
+            if (pid == getpid() || pid == 0 || pid == -1) {
+                ALOGW("FEATURESTIC SECCOMP: Suppressed inline kill(pid=%d, sig=%ld) tid=%d",
+                      static_cast<int>(pid), a1, static_cast<int>(gettid()));
+                uc->uc_mcontext.regs[0] = 0;
+                return;
+            }
+            uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                    raw_real_syscall(129, a0, a1, 0, 0, 0, 0x5afe5afe));
+            return;
+        }
+        case 130: // __NR_tkill
+        case 131: { // __NR_tgkill
+            pid_t tgid = (nr == 131) ? static_cast<pid_t>(a0) : getpid();
+            long sigNum = (nr == 131) ? a2 : a1;
+            if (tgid == getpid() || tgid == 0 || tgid == -1) {
+                ALOGW("FEATURESTIC SECCOMP: Suppressed inline %s(tgid=%d, tid=%ld, sig=%ld) from tid=%d",
+                      (nr == 131) ? "tgkill" : "tkill",
+                      static_cast<int>(tgid), (nr == 131) ? a1 : a0, sigNum, static_cast<int>(gettid()));
+                uc->uc_mcontext.regs[0] = 0;
+                return;
+            }
+            uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                    raw_real_syscall(nr, a0, a1, a2, 0, 0, 0x5afe5afe));
+            return;
+        }
+        case 132: { // __NR_sigaltstack
+            if (a0 != 0) {
+                const auto *ss = reinterpret_cast<const stack_t *>(a0);
+                if ((ss->ss_flags & 2 /* SS_DISABLE */) || ss->ss_sp == nullptr || ss->ss_size < MINSIGSTKSZ) {
+                    if (a1 != 0) {
+                        uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                                raw_real_syscall(132, 0, a1, 0, 0, 0, 0x5afe5afe));
+                    } else {
+                        uc->uc_mcontext.regs[0] = 0;
+                    }
+                    return;
+                }
+            }
+            uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                    raw_real_syscall(132, a0, a1, 0, 0, 0, 0x5afe5afe));
+            return;
+        }
+        case 134: { // __NR_rt_sigaction
+            if (a1 == 0) {
+                uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                        raw_real_syscall(134, a0, 0, a2, a3 ? a3 : 8, 0, 0x5afe5afe));
+                return;
+            }
+            void *handler = *reinterpret_cast<void *const *>(a1);
+            if (a2 != 0) {
+                raw_real_syscall(134, a0, 0, a2, a3 ? a3 : 8, 0, 0x5afe5afe);
+            }
+            ALOGW("FEATURESTIC SECCOMP: Blocked inline rt_sigaction(sig=%ld, handler=%p) from tid=%d",
+                  a0, handler, static_cast<int>(gettid()));
+            uc->uc_mcontext.regs[0] = 0;
+            return;
+        }
+        case 135: { // __NR_rt_sigprocmask
+            if (a1 != 0 && (a0 == 0 /* SIG_BLOCK */ || a0 == 2 /* SIG_SETMASK */)) {
+                uint64_t mask = *reinterpret_cast<const uint64_t *>(a1);
+                constexpr uint64_t DANGEROUS_MASK = (1ULL << (SIGSEGV - 1)) |
+                                                    (1ULL << (SIGBUS - 1))  |
+                                                    (1ULL << (SIGSYS - 1))  |
+                                                    (1ULL << (SIGILL - 1))  |
+                                                    (1ULL << (SIGABRT - 1)) |
+                                                    (1ULL << (SIGQUIT - 1));
+                mask &= ~DANGEROUS_MASK;
+                uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                        raw_real_syscall(135, a0, reinterpret_cast<long>(&mask), a2, a3 ? a3 : 8, 0, 0x5afe5afe));
+                return;
+            }
+            uc->uc_mcontext.regs[0] = static_cast<unsigned long>(
+                    raw_real_syscall(135, a0, a1, a2, a3 ? a3 : 8, 0, 0x5afe5afe));
+            return;
+        }
+        default:
+            break;
+    }
+}
+
 static bool installSeccompVfsFilter() {
-    static std::atomic<bool> sSeccompInstalled{false};
-    bool expected = false;
-    if (!sSeccompInstalled.compare_exchange_strong(expected, true)) {
-        return true;
-    }
+    // STEP 1 A/B TEST: disable SECCOMP-BPF signal guard
+    return false;
+    static std::atomic<bool> sInstalled{false};
+    if (sInstalled.exchange(true)) return true;
 
+    // Zero-SIGSYS SECCOMP-BPF signal guard using SECCOMP_RET_ERRNO | 0:
+    // Silently returns 0 (success) in-kernel for inline svc #0 attempts to overwrite
+    // SIGSEGV/SIGBUS/SIGILL/SIGABRT or send fatal kill/tkill/tgkill signals.
+    // Never raises SIGSYS (zero Signal 31 / pthread_create conflict).
+    constexpr uint32_t RET_SILENT_OK = SECCOMP_RET_ERRNO | 0U;
     struct sock_filter filter[] = {
-        // [0] Load architecture
-        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof(struct seccomp_data, arch))),
-        // [1] If arch == AUDIT_ARCH_AARCH64, continue; else allow
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_AARCH64, 1, 0),
-        // [2] Allow other architectures
-        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+        /* 00 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 4),
+        /* 01 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0xc00000b7U, 1, 0),
+        /* 02 */ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
 
-        // [3] Load syscall number
-        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof(struct seccomp_data, nr))),
+        /* 03 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 56),           // args[5] magic
+        /* 04 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0x5afe5afeU, 0, 1),
+        /* 05 */ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
 
-        // [4] Check 131 (__NR_tgkill)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 131, 0, 5),
-        // [5] Load args[2] (signal) for tgkill
-        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof(struct seccomp_data, args[2]))),
-        // [6] If sig == SIGBUS (7), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 7, 13, 0),
-        // [7] If sig == SIGSEGV (11), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11, 12, 0),
-        // [8] If sig == SIGABRT (6), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 11, 0),
-        // [9] Allow other signals on tgkill
-        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+        /* 06 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 0),            // nr
+        /* 07 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 134, 3,  0),  // __NR_rt_sigaction -> 11
+        /* 08 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 129, 11, 0),  // __NR_kill -> 20
+        /* 09 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 130, 10, 0),  // __NR_tkill -> 20
+        /* 10 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 131, 11, 19), // __NR_tgkill -> 22 else 30
 
-        // [10] Check 130 (__NR_tkill)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 130, 0, 5),
-        // [11] Load args[1] (signal) for tkill
-        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof(struct seccomp_data, args[1]))),
-        // [12] If sig == SIGBUS (7), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 7, 7, 0),
-        // [13] If sig == SIGSEGV (11), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11, 6, 0),
-        // [14] If sig == SIGABRT (6), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6, 5, 0),
-        // [15] Allow other signals on tkill
-        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
+        /* 11 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 24),           // rt_sigaction act lo
+        /* 12 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0,   0,  2),  // if lo==0 check hi else 15
+        /* 13 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 28),           // rt_sigaction act hi
+        /* 14 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 0,   15, 0),  // act==NULL -> 30 ALLOW
+        /* 15 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 16),           // rt_sigaction sig
+        /* 16 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11,  12, 0),  // SIGSEGV -> 29
+        /* 17 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 7,   11, 0),  // SIGBUS -> 29
+        /* 18 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6,   10, 0),  // SIGABRT -> 29
+        /* 19 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 4,   9,  10), // SIGILL -> 29 else 30
 
-        // [16] Check 134 (__NR_rt_sigaction)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 134, 0, 4),
-        // [17] Load args[0] (signal) for rt_sigaction
-        BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof(struct seccomp_data, args[0]))),
-        // [18] If sig == SIGBUS (7), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 7, 1, 0),
-        // [19] If sig == SIGSEGV (11), jump to [20] (suppress)
-        BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11, 0, 1),
-
-        // [20] Suppress dangerous action: return 0 (success) without executing!
-        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ERRNO | 0),
-
-        // [21] Allow everything else at full native kernel speed
-        BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW)
+        /* 20 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 24),           // kill/tkill args[1]
+        /* 21 */ BPF_JUMP(BPF_JMP | BPF_JA, 1, 0, 0),              // -> 23
+        /* 22 */ BPF_STMT(BPF_LD | BPF_W | BPF_ABS, 32),           // tgkill args[2]
+        /* 23 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 11,  5,  0),  // SIGSEGV -> 29
+        /* 24 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 7,   4,  0),  // SIGBUS -> 29
+        /* 25 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 6,   3,  0),  // SIGABRT -> 29
+        /* 26 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 4,   2,  0),  // SIGILL -> 29
+        /* 27 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 9,   1,  0),  // SIGKILL -> 29
+        /* 28 */ BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, 15,  0,  1),  // SIGTERM -> 29 else 30
+        /* 29 */ BPF_STMT(BPF_RET | BPF_K, RET_SILENT_OK),
+        /* 30 */ BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
     };
 
-    struct sock_fprog prog = {
-        .len = static_cast<unsigned short>(sizeof(filter) / sizeof(filter[0])),
-        .filter = filter
-    };
+    struct sock_fprog prog{};
+    prog.len = static_cast<unsigned short>(sizeof(filter) / sizeof(filter[0]));
+    prog.filter = filter;
 
-    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
-        ALOGW("NativeVfsHook: prctl(PR_SET_NO_NEW_PRIVS) returned error (errno=%d)", errno);
-        return false;
-    }
+    prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
     if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) != 0) {
-        ALOGW("NativeVfsHook: prctl(PR_SET_SECCOMP) returned error (errno=%d)", errno);
+        ALOGW("NativeVfsHook: Failed to install zero-SIGSYS SECCOMP guard (errno=%d)", errno);
         return false;
     }
-    ALOGI("NativeVfsHook: Installed protective SECCOMP-BPF filter (immune to inline tgkill/tkill/rt_sigaction fatal traps)");
+    ALOGI("NativeVfsHook: Zero-SIGSYS SECCOMP-BPF signal guard active!");
     return true;
 }
 #else
@@ -1340,6 +1447,13 @@ void init() {
     }
 
 #if defined(__aarch64__)
+    // CRITICAL STEALTH ARCHITECTURE:
+    // DO NOT INLINE-HOOK LIBC FUNCTIONS (openat, syscall, fstatat, etc.)!
+    // Inline hooking libc.so functions overwrites the .text instructions of libc.so,
+    // which triggers Tencent Anti-Cheat (ACE / TP / Anogs) post-login memory integrity hash verification
+    // and causes silent process termination (exit_group / SIGKILL).
+    // All virtual file routing is cleanly handled at the Java/JNI layer (LinuxHook.cpp)
+    // and scoped ELF GOT hooks for libhdmpve.so.
     void *openatSym = dlsym(RTLD_DEFAULT, "openat");
     void *openat64Sym = dlsym(RTLD_DEFAULT, "openat64");
     void *openSym = dlsym(RTLD_DEFAULT, "open");
@@ -1358,114 +1472,27 @@ void init() {
     void *readlinkatSym = dlsym(RTLD_DEFAULT, "readlinkat");
     void *readlinkSym = dlsym(RTLD_DEFAULT, "readlink");
 
-    if (openatSym) {
-        A64HookFunction(openatSym,
-                        reinterpret_cast<void *>(safe_openat),
-                        reinterpret_cast<void **>(&sOrigOpenat));
-    }
-    if (openat64Sym && openat64Sym != openatSym) {
-        A64HookFunction(openat64Sym,
-                        reinterpret_cast<void *>(safe_openat64),
-                        reinterpret_cast<void **>(&sOrigOpenat64));
-    }
-    if (openSym && openSym != openatSym) {
-        A64HookFunction(openSym,
-                        reinterpret_cast<void *>(safe_open),
-                        reinterpret_cast<void **>(&sOrigOpen));
-    }
-    if (faccessatSym) {
-        A64HookFunction(faccessatSym,
-                        reinterpret_cast<void *>(safe_faccessat),
-                        reinterpret_cast<void **>(&sOrigFaccessat));
-    }
-    if (accessSym && accessSym != faccessatSym) {
-        A64HookFunction(accessSym,
-                        reinterpret_cast<void *>(safe_access),
-                        reinterpret_cast<void **>(&sOrigAccess));
-    }
-    if (fstatatSym) {
-        A64HookFunction(fstatatSym,
-                        reinterpret_cast<void *>(safe_fstatat),
-                        reinterpret_cast<void **>(&sOrigFstatat));
-    }
-    if (fstatat64Sym && fstatat64Sym != fstatatSym) {
-        A64HookFunction(fstatat64Sym,
-                        reinterpret_cast<void *>(safe_fstatat64),
-                        reinterpret_cast<void **>(&sOrigFstatat64));
-    }
-    if (statSym) {
-        A64HookFunction(statSym,
-                        reinterpret_cast<void *>(safe_stat),
-                        reinterpret_cast<void **>(&sOrigStat));
-    }
-    if (lstatSym) {
-        A64HookFunction(lstatSym,
-                        reinterpret_cast<void *>(safe_lstat),
-                        reinterpret_cast<void **>(&sOrigLstat));
-    }
-    if (stat64Sym && stat64Sym != statSym) {
-        A64HookFunction(stat64Sym,
-                        reinterpret_cast<void *>(safe_stat64),
-                        reinterpret_cast<void **>(&sOrigStat64));
-    }
-    if (lstat64Sym && lstat64Sym != lstatSym) {
-        A64HookFunction(lstat64Sym,
-                        reinterpret_cast<void *>(safe_lstat64),
-                        reinterpret_cast<void **>(&sOrigLstat64));
-    }
-    if (statxSym) {
-        A64HookFunction(statxSym,
-                        reinterpret_cast<void *>(safe_statx),
-                        reinterpret_cast<void **>(&sOrigStatx));
-    }
-    if (syscallSym) {
-        A64HookFunction(syscallSym,
-                        reinterpret_cast<void *>(safe_syscall),
-                        reinterpret_cast<void **>(&sOrigSyscall));
-    }
-    if (fstatSym) {
-        A64HookFunction(fstatSym,
-                        reinterpret_cast<void *>(safe_fstat),
-                        reinterpret_cast<void **>(&sOrigFstat));
-    }
-    if (fstat64Sym && fstat64Sym != fstatSym) {
-        A64HookFunction(fstat64Sym,
-                        reinterpret_cast<void *>(safe_fstat64),
-                        reinterpret_cast<void **>(&sOrigFstat64));
-    }
-    if (readlinkatSym) {
-        A64HookFunction(readlinkatSym,
-                        reinterpret_cast<void *>(safe_readlinkat),
-                        reinterpret_cast<void **>(&sOrigReadlinkat));
-    }
-    if (readlinkSym && readlinkSym != readlinkatSym) {
-        A64HookFunction(readlinkSym,
-                        reinterpret_cast<void *>(safe_readlink),
-                        reinterpret_cast<void **>(&sOrigReadlink));
-    }
+    if (openatSym) sOrigOpenat = reinterpret_cast<openat_fn_t>(openatSym);
+    if (openat64Sym) sOrigOpenat64 = reinterpret_cast<openat_fn_t>(openat64Sym);
+    if (openSym) sOrigOpen = reinterpret_cast<open_fn_t>(openSym);
+    if (faccessatSym) sOrigFaccessat = reinterpret_cast<faccessat_fn_t>(faccessatSym);
+    if (accessSym) sOrigAccess = reinterpret_cast<access_fn_t>(accessSym);
+    if (fstatatSym) sOrigFstatat = reinterpret_cast<fstatat_fn_t>(fstatatSym);
+    if (fstatat64Sym) sOrigFstatat64 = reinterpret_cast<fstatat_fn_t>(fstatat64Sym);
+    if (statSym) sOrigStat = reinterpret_cast<stat_fn_t>(statSym);
+    if (lstatSym) sOrigLstat = reinterpret_cast<lstat_fn_t>(lstatSym);
+    if (stat64Sym) sOrigStat64 = reinterpret_cast<stat64_fn_t>(stat64Sym);
+    if (lstat64Sym) sOrigLstat64 = reinterpret_cast<lstat64_fn_t>(lstat64Sym);
+    if (statxSym) sOrigStatx = reinterpret_cast<statx_fn_t>(statxSym);
+    if (syscallSym) sOrigSyscall = reinterpret_cast<syscall_fn_t>(syscallSym);
+    if (fstatSym) sOrigFstat = reinterpret_cast<fstat_fn_t>(fstatSym);
+    if (fstat64Sym) sOrigFstat64 = reinterpret_cast<fstat_fn_t>(fstat64Sym);
+    if (readlinkatSym) sOrigReadlinkat = reinterpret_cast<readlinkat_fn_t>(readlinkatSym);
+    if (readlinkSym) sOrigReadlink = reinterpret_cast<readlink_fn_t>(readlinkSym);
 
-    if (!sOrigOpenat && openatSym) sOrigOpenat = reinterpret_cast<openat_fn_t>(openatSym);
-    if (!sOrigOpenat64 && openat64Sym) sOrigOpenat64 = reinterpret_cast<openat_fn_t>(openat64Sym);
-    if (!sOrigOpen && openSym) sOrigOpen = reinterpret_cast<open_fn_t>(openSym);
-    if (!sOrigFaccessat && faccessatSym) sOrigFaccessat = reinterpret_cast<faccessat_fn_t>(faccessatSym);
-    if (!sOrigAccess && accessSym) sOrigAccess = reinterpret_cast<access_fn_t>(accessSym);
-    if (!sOrigFstatat && fstatatSym) sOrigFstatat = reinterpret_cast<fstatat_fn_t>(fstatatSym);
-    if (!sOrigFstatat64 && fstatat64Sym) sOrigFstatat64 = reinterpret_cast<fstatat_fn_t>(fstatat64Sym);
-    if (!sOrigStat && statSym) sOrigStat = reinterpret_cast<stat_fn_t>(statSym);
-    if (!sOrigLstat && lstatSym) sOrigLstat = reinterpret_cast<lstat_fn_t>(lstatSym);
-    if (!sOrigStat64 && stat64Sym) sOrigStat64 = reinterpret_cast<stat64_fn_t>(stat64Sym);
-    if (!sOrigLstat64 && lstat64Sym) sOrigLstat64 = reinterpret_cast<lstat64_fn_t>(lstat64Sym);
-    if (!sOrigStatx && statxSym) sOrigStatx = reinterpret_cast<statx_fn_t>(statxSym);
-    if (!sOrigSyscall && syscallSym) sOrigSyscall = reinterpret_cast<syscall_fn_t>(syscallSym);
-    if (!sOrigFstat && fstatSym) sOrigFstat = reinterpret_cast<fstat_fn_t>(fstatSym);
-    if (!sOrigFstat64 && fstat64Sym) sOrigFstat64 = reinterpret_cast<fstat_fn_t>(fstat64Sym);
-    if (!sOrigReadlinkat && readlinkatSym) sOrigReadlinkat = reinterpret_cast<readlinkat_fn_t>(readlinkatSym);
-    if (!sOrigReadlink && readlinkSym) sOrigReadlink = reinterpret_cast<readlink_fn_t>(readlinkSym);
-
+    ALOGI("NativeVfsHook: Libc inline hooks safely disabled: zero tampering on libc.so text segment for Tencent Anti-Cheat");
     installSeccompVfsFilter();
 #endif
-
-    ALOGI("NativeVfsHook: Libc VFS and Procfs virtualization hooks active");
 }
 
 int rawDirectOpen(const char *path, int flags, mode_t mode) {

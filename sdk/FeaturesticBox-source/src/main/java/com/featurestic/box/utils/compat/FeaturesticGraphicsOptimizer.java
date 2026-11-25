@@ -100,7 +100,7 @@ public final class FeaturesticGraphicsOptimizer {
                 return "Ultra Sharp HDR + 120 FPS";
             case PRESET_DEFAULT:
             default:
-                return "Off - Default Graphics";
+                return "Off • Default Graphics";
         }
     }
 

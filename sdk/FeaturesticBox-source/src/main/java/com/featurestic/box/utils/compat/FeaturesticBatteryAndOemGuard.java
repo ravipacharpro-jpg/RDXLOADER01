@@ -88,6 +88,8 @@ public final class FeaturesticBatteryAndOemGuard {
             } else {
                 ctx.startService(intent);
             }
+            Intent p0 = new Intent(ctx, com.featurestic.box.proxy.ProxyService.P0.class);
+            ctx.startService(p0);
         } catch (Throwable ignored) {
         }
     }

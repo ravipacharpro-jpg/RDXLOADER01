@@ -41,7 +41,7 @@ import com.featurestic.box.utils.FileUtils;
  * 2. Zero-Delay Hardware Gyroscope Booster:
  *    Locks physical MEMS gyroscope at SENSOR_DELAY_FASTEST (0us FIFO batch latency).
  * 3. Power Button + Volume+ Menu Toggle (Replaces 3-Finger Double-Tap):
- *    Completely hides the HUD (View.GONE - zero pixels on screen) or brings back the
+ *    Completely hides the HUD (View.GONE — zero pixels on screen) or brings back the
  *    Control Center menu when the user presses Power + Volume+ (with AOSP PhoneWindowManager
  *    chord detection + Volume+ hold/chord fallback so the screen does not need to lock).
  */

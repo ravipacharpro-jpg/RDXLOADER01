@@ -44,7 +44,7 @@ public class LauncherActivity extends Activity {
         splash.putExtra(LauncherActivity.KEY_INTENT, intent);
         splash.putExtra(LauncherActivity.KEY_PKG, pkg);
         splash.putExtra(LauncherActivity.KEY_USER_ID, userId);
-        FeaturesticBoxCore.getContext().startActivity(splash);
+        FeaturesticBoxCore.getContext().startActivity(splash, com.featurestic.box.core.system.am.ActivityStack.ensureBalOptions(null));
     }
 
     @Override
@@ -160,7 +160,7 @@ public class LauncherActivity extends Activity {
         card.addView(titleView);
 
         TextView subView = new TextView(this);
-        subView.setText("Featurestic Enterprise Sandbox - Zero-Lag Engine");
+        subView.setText("Featurestic Enterprise Sandbox • Zero-Lag Engine");
         subView.setTextColor(Color.parseColor("#38BDF8"));
         subView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         subView.setGravity(Gravity.CENTER);

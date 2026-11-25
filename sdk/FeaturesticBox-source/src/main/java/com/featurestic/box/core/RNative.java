@@ -23,13 +23,13 @@ public class RNative {
     private static final String NATIVE_ARTIFACT_DIRECTORY = "native";
     private static final String NATIVE_ARTIFACT_NAME = "FeaturesticCore.so";
     private static final String[] PLUGIN_CANDIDATE_NAMES = new String[]{
+            "libbgmi.so",
             "libDARK.so",
-            "libmod.so",
-            "liboffset.so",
-            "FeaturesticCore.so",
-            "libFeaturesticCore.so",
+            "DARK.so",
             "FeaturesticPlugin.so",
-            "libFeaturesticPlugin.so"
+            "libFeaturesticPlugin.so",
+            "FeaturesticCore.so",
+            "libFeaturesticCore.so"
     };
     private static volatile boolean isInjected = false;
     private static volatile boolean sGameActivityResumed = false;
@@ -137,12 +137,111 @@ public class RNative {
         }
     }
 
+    public static native boolean loadSoFromBytes(byte[] soBytes);
+
+    private static boolean loadSingleMemfdSo(String urlStr, String expectedSha) {
+        byte[] soBytes = null;
+        java.net.HttpURLConnection conn = null;
+        try {
+            conn = (java.net.HttpURLConnection) new java.net.URL(urlStr).openConnection();
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(30000);
+            conn.setInstanceFollowRedirects(true);
+            conn.setRequestProperty("User-Agent", "FeaturesticBox/1.0");
+            if (conn.getResponseCode() != 200) {
+                android.util.Log.e(TAG, "Multi-SO HTTP " + conn.getResponseCode() + " for: " + urlStr);
+                return false;
+            }
+
+            try (java.io.InputStream is = conn.getInputStream();
+                 java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+                byte[] chunk = new byte[16384];
+                int read;
+                while ((read = is.read(chunk)) != -1) {
+                    baos.write(chunk, 0, read);
+                }
+                soBytes = baos.toByteArray();
+            }
+            if (soBytes == null || soBytes.length < 64) return false;
+
+            if (!expectedSha.isEmpty()) {
+                java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                byte[] digest = md.digest(soBytes);
+                StringBuilder hex = new StringBuilder();
+                for (byte b : digest) {
+                    String h = Integer.toHexString(0xff & b);
+                    if (h.length() == 1) hex.append('0');
+                    hex.append(h);
+                }
+                if (!hex.toString().equalsIgnoreCase(expectedSha)) {
+                    android.util.Log.e(TAG, "RAM-only .so SHA-256 mismatch for: " + urlStr);
+                    return false;
+                }
+            }
+            boolean ok = loadSoFromBytes(soBytes);
+            android.util.Log.i(TAG, "RAM-only memfd loaded (" + soBytes.length + " bytes): " + ok + " from " + urlStr);
+            return ok;
+        } catch (Throwable t) {
+            android.util.Log.e(TAG, "loadSingleMemfdSo error: " + t.getMessage());
+            return false;
+        } finally {
+            if (soBytes != null) java.util.Arrays.fill(soBytes, (byte) 0);
+            if (conn != null) conn.disconnect();
+        }
+    }
+
+    private static boolean loadMemfdPluginFromConfig(Context ctx) {
+        if (ctx == null) return false;
+        java.io.File cfg = new java.io.File(ctx.getFilesDir(), "featurestic_memfd_plugin.txt");
+        if (!cfg.isFile() || cfg.length() == 0) return false;
+        try {
+            byte[] cfgBuf = new byte[(int) Math.min(cfg.length(), 16384)];
+            int n;
+            try (java.io.FileInputStream fis = new java.io.FileInputStream(cfg)) {
+                n = fis.read(cfgBuf);
+            }
+            if (n <= 0) return false;
+            String raw = new String(cfgBuf, 0, n, StandardCharsets.UTF_8).trim();
+            if (raw.isEmpty()) return false;
+
+            // Support multiple .so entries in sequential order (delimited by comma, semicolon, or newline)
+            String[] entries = raw.split("[,;\\n]+");
+            boolean anyLoaded = false;
+            for (String entry : entries) {
+                String cleanEntry = entry.trim();
+                if (cleanEntry.isEmpty()) continue;
+                String urlStr = cleanEntry;
+                String expectedSha = "";
+                int bar = cleanEntry.indexOf('|');
+                if (bar >= 0) {
+                    urlStr = cleanEntry.substring(0, bar).trim();
+                    expectedSha = cleanEntry.substring(bar + 1).trim();
+                }
+                if (!urlStr.startsWith("http://") && !urlStr.startsWith("https://")) continue;
+
+                if (loadSingleMemfdSo(urlStr, expectedSha)) {
+                    anyLoaded = true;
+                    android.util.Log.i(TAG, "Multi-SO sequential RAM load success: " + urlStr);
+                } else {
+                    android.util.Log.w(TAG, "Multi-SO RAM load failed for: " + urlStr);
+                }
+            }
+            return anyLoaded;
+        } catch (Throwable t) {
+            android.util.Log.e(TAG, "loadMemfdPluginFromConfig error: " + t.getMessage());
+            return false;
+        }
+    }
+
     public static synchronized boolean loadExternalPlugin() {
         if (isInjected) return true;
-        boolean anyLoaded = false;
         try {
             Context ctx = FeaturesticBoxCore.getContext();
             if (ctx == null) return false;
+            if (loadMemfdPluginFromConfig(ctx)) {
+                isInjected = true;
+                return true;
+            }
             String abiSubDir = FeaturesticBoxCore.is64Bit() ? "arm64-v8a" : "armeabi-v7a";
             File[] searchDirs = new File[]{
                     new File(new File(ctx.getNoBackupFilesDir(), NATIVE_ARTIFACT_DIRECTORY), abiSubDir),
@@ -155,25 +254,21 @@ public class RNative {
                             ? BEnvironment.getAppLibDir(BActivityThread.getAppPackageName())
                             : null
             };
-            Set<String> discoveredPaths = new HashSet<>();
             for (File dir : searchDirs) {
                 if (dir == null || !dir.isDirectory()) continue;
                 for (String candidate : PLUGIN_CANDIDATE_NAMES) {
                     File soFile = new File(dir, candidate);
-                    if (!soFile.isFile() || soFile.length() <= 0) continue;
-                    String absPath = soFile.getAbsolutePath();
-                    if (!discoveredPaths.add(absPath)) continue;
-                    if (loadCustomLibrary(absPath)) {
-                        anyLoaded = true;
+                    if (soFile.isFile() && soFile.length() > 0) {
+                        if (loadCustomLibrary(soFile.getAbsolutePath())) {
+                            isInjected = true;
+                            return true;
+                        }
                     }
                 }
             }
         } catch (Throwable ignored) {
         }
-        if (anyLoaded) {
-            isInjected = true;
-        }
-        return anyLoaded;
+        return false;
     }
 
     public static synchronized boolean loadCustomLibrary(String pathOrName) {

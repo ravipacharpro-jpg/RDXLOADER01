@@ -229,7 +229,7 @@ public class BProcessManagerService implements ISystemService {
 		AppConfig appConfig = record.getClientConfig();
 		Bundle bundle = new Bundle();
 		bundle.putParcelable(AppConfig.KEY, appConfig);
-		//  CRASH FIX: Line 209
+		// 🔥 CRASH FIX: Line 209
 		Bundle result;
 		try {
 			result = ProviderCall.callSafely(record.getProviderAuthority(), "_Black_|_init_process_", (String) null, bundle);
@@ -258,6 +258,12 @@ public class BProcessManagerService implements ISystemService {
                 public void binderDied() {
                     Log.d(TAG, "App Died: " + app.processName);
                     appThread.unlinkToDeath(this, 0);
+                    if (app.processName != null) {
+                        try {
+                            com.featurestic.box.core.CrashHandler.reportProcessDied(app.processName, app.pid);
+                        } catch (Throwable ignored) {
+                        }
+                    }
                     onProcessDie(app);
                 }
             }, 0);

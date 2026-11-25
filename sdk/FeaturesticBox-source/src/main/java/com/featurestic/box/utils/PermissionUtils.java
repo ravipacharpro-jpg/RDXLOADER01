@@ -61,7 +61,7 @@ public class PermissionUtils {
         add(Manifest.permission.MODIFY_AUDIO_SETTINGS);
 
         // STORAGE / FILES & MEDIA (Android 9 -> 16)
-        // Legacy storage for Android 9-12:
+        // Legacy storage for Android 9–12:
         add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (Build.VERSION.SDK_INT >= 16) {
             add(Manifest.permission.READ_EXTERNAL_STORAGE);

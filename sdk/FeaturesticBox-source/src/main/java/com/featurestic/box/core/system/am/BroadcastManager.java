@@ -24,7 +24,7 @@ import com.featurestic.box.utils.compat.BuildCompat;
 
 /**
  * Fixed BroadcastManager
- * Android 10-15 compatible
+ * Android 10–15 compatible
  */
 public class BroadcastManager implements PackageMonitor {
 
@@ -107,7 +107,7 @@ public class BroadcastManager implements PackageMonitor {
                             // Android 12
                             ctx.registerReceiver(proxy,info.intentFilter,Context.RECEIVER_NOT_EXPORTED);
                         } else {
-                            // Android 10-11
+                            // Android 10–11
                             ctx.registerReceiver(proxy, info.intentFilter);
                         }
                         addReceiver(bPackage.packageName, proxy);

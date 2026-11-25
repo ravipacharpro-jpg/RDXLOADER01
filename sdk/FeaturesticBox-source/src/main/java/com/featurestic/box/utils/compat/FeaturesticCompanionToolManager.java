@@ -109,7 +109,7 @@ public final class FeaturesticCompanionToolManager {
         loadSavedConfig(null);
         String installedPkg = findInstalledCompanionPackage(userId);
         if (installedPkg != null) {
-            return "Ready - Tap to Play in Virtual Root Mode";
+            return "Ready • Tap to Play in Virtual Root Mode";
         }
         return "Tap for 1-Click Setup & Play";
     }
@@ -153,7 +153,7 @@ public final class FeaturesticCompanionToolManager {
         String installedNow = findInstalledCompanionPackage(userId);
         statusTv.setText(installedNow != null
                 ? "Status: Installed in Virtual Slot " + userId + " (Root-Equivalent Ready)"
-                : "Status: Not set up in Slot " + userId + " yet - Click Setup below");
+                : "Status: Not set up in Slot " + userId + " yet • Click Setup below");
         statusTv.setTextColor(Color.parseColor("#98989D"));
         statusTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11.5f);
         statusTv.setPadding(0, dp(activity, 6), 0, dp(activity, 10));
@@ -173,7 +173,7 @@ public final class FeaturesticCompanionToolManager {
             // First check if GG is already installed on the host phone or in /sdcard/Download
             String hostGgPkg = findHostInstalledGgPackage(activity);
             if (hostGgPkg != null) {
-                statusTv.setText("Found GG on phone (" + hostGgPkg + ") - Cloning into Slot " + userId + "...");
+                statusTv.setText("Found GG on phone (" + hostGgPkg + ") • Cloning into Slot " + userId + "...");
                 progressBar.setVisibility(View.VISIBLE);
                 progressBar.setProgress(50);
                 new Thread(() -> {
@@ -184,10 +184,10 @@ public final class FeaturesticCompanionToolManager {
                             sToolPackageName = res.packageName;
                             statusTv.setText("Setup Complete! Now tap '2. Start GG & Play' below.");
                             if (statusSubtitleView != null) {
-                                statusSubtitleView.setText("Ready - Tap to Play in Virtual Root Mode");
+                                statusSubtitleView.setText("Ready • Tap to Play in Virtual Root Mode");
                             }
                         } else {
-                            statusTv.setText("Host clone failed - Trying local/cloud APK...");
+                            statusTv.setText("Host clone failed • Trying local/cloud APK...");
                         }
                     });
                 }).start();
@@ -341,10 +341,10 @@ public final class FeaturesticCompanionToolManager {
                         sToolPackageName = res.packageName;
                         statusTv.setText("Setup Complete! Tap '2. Start GG & Play' to launch.");
                         if (menuSubTv != null) {
-                            menuSubTv.setText("Ready - Tap to Play in Virtual Root Mode");
+                            menuSubTv.setText("Ready • Tap to Play in Virtual Root Mode");
                         }
                     } else {
-                        statusTv.setText("APK install failed - Check APK file");
+                        statusTv.setText("APK install failed • Check APK file");
                     }
                 });
             } catch (Throwable ignored) {

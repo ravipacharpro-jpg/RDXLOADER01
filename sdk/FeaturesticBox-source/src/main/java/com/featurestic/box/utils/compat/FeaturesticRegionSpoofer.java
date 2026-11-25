@@ -87,15 +87,15 @@ public final class FeaturesticRegionSpoofer {
     public static String getRegionDisplayLabel(int region) {
         switch (region) {
             case REGION_KOREA_KR:
-                return "Korea (KR - SK Telecom - PUBG KR)";
+                return "Korea (KR • SK Telecom — PUBG KR)";
             case REGION_JAPAN_JP:
-                return "Japan (JP - NTT Docomo)";
+                return "Japan (JP • NTT Docomo)";
             case REGION_SINGAPORE_SG:
-                return "Singapore (SG - Singtel Asia)";
+                return "Singapore (SG • Singtel Asia)";
             case REGION_INDIA_IN:
-                return "India (IN - Jio True 5G)";
+                return "India (IN • Jio True 5G)";
             case REGION_GLOBAL_US:
-                return "Global / USA (US - T-Mobile)";
+                return "Global / USA (US • T-Mobile)";
             case REGION_AUTO_DEFAULT:
             default:
                 return "Auto (Host SIM Default)";

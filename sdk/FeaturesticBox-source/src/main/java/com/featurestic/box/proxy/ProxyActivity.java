@@ -23,7 +23,7 @@ import com.featurestic.box.proxy.record.ProxyActivityRecord;
 
 /**
  * ProxyActivity
- * Fixed & Hardened for Android 10-16.
+ * Fixed & Hardened for Android 10–16.
  */
 public class ProxyActivity extends Activity {
 

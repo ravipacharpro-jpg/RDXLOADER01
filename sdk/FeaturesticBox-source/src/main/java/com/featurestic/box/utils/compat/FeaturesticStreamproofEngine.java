@@ -33,7 +33,7 @@ import com.featurestic.box.utils.FileUtils;
  * Built-In Streamproof ("Hide ESP / Hide Mod Name / Hide Floating Menu in Screenshots &
  * Screen Recording while Keeping Gameplay 100% Visible") Engine for FeaturesticBox.
  *
- * How it works across Android 10-16 without blacking out the game screen:
+ * How it works across Android 10–16 without blacking out the game screen:
  * 1. Main Game Window Protection:
  *    Ensures WindowManager.LayoutParams.FLAG_SECURE is ALWAYS CLEARED on the main
  *    Game Activity Window (TYPE_BASE_APPLICATION), so 100% of the gameplay is captured

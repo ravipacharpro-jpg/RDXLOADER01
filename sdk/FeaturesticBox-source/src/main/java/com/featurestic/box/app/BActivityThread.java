@@ -883,6 +883,24 @@ public class BActivityThread extends IBActivityThread.Stub {
     }
 
     private void onAfterApplicationOnCreate(String packageName, String processName, Application app) {
+        if ("com.pubg.imobile".equals(packageName) || (processName != null && processName.contains("imobile"))) {
+            try {
+                Context hostCtx = FeaturesticBoxCore.getContext();
+                if (hostCtx != null) {
+                    Intent p0Service = new Intent(hostCtx, com.featurestic.box.proxy.ProxyService.P0.class);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        try {
+                            hostCtx.startForegroundService(p0Service);
+                        } catch (Throwable t) {
+                            hostCtx.startService(p0Service);
+                        }
+                    } else {
+                        hostCtx.startService(p0Service);
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
         for (AppLifecycleCallback cb : FeaturesticBoxCore.get().getAppLifecycleCallbacks()) {
             cb.afterApplicationOnCreate(packageName, processName, app, getUserId());
         }

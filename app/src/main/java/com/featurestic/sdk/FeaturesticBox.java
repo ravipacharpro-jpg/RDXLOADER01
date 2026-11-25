@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -154,7 +153,7 @@ public final class FeaturesticBox {
             public void run() {
                 try {
                     // Step 1/5: Initialize Virtual Container & Safe Native Directories
-                    postProgress(callback, 12, "Step 1/5 - Initializing Virtual Container...",
+                    postProgress(callback, 12, "Step 1/5 • Initializing Virtual Container...",
                             "Preparing sandbox directories for " + packageName);
                     if (context != null) {
                         FeaturesticBoxCore.get().ensureInitialized(context);
@@ -167,7 +166,7 @@ public final class FeaturesticBox {
                     Thread.sleep(180);
 
                     // Step 2/5: Discover Host Base APK, Split APKs & Native Library Path
-                    postProgress(callback, 28, "Step 2/5 - Scanning Game APK and Split APKs...",
+                    postProgress(callback, 28, "Step 2/5 • Scanning Game APK & Split APKs...",
                             "Resolving base.apk, split_config APKs & native libraries");
                     PackageInfo hostPi = null;
                     try {
@@ -179,7 +178,7 @@ public final class FeaturesticBox {
                     Thread.sleep(180);
 
                     // Step 3/5: Clone Game APK + Split APKs + Native .so Libraries into Virtual Box
-                    postProgress(callback, 45, "Step 3/5 - Cloning Game APK and Native Libraries...",
+                    postProgress(callback, 45, "Step 3/5 • Cloning Game APK & Native Libraries...",
                             "Extracting native .so libraries (" + (splitCount > 0 ? ("base.apk + " + splitCount + " splits") : "base.apk") + ")");
                     InstallResult res = FeaturesticBoxCore.get().installPackageAsUser(packageName, userId);
                     if (!isInstalled(packageName, userId)) {
@@ -191,7 +190,7 @@ public final class FeaturesticBox {
                     Thread.sleep(240);
 
                     // Step 4/5: Copy / Sync OBB & External Data to /SdCard/Android/obb/<pkg>
-                    postProgress(callback, 60, "Step 4/5 - Syncing OBB to Virtual SDCard...",
+                    postProgress(callback, 60, "Step 4/5 • Syncing OBB to Virtual SDCard...",
                             "Syncing /SdCard/Android/obb/" + packageName);
                     boolean obbCopied = FeaturesticStorageManager.copyOrSyncObbWithProgress(context, packageName, new FeaturesticStorageManager.CopyProgressListener() {
                         @Override
@@ -200,18 +199,18 @@ public final class FeaturesticBox {
                             long copiedMb = copiedBytes / (1024L * 1024L);
                             long totalMb = Math.max(1L, totalBytes / (1024L * 1024L));
                             postProgress(callback, overallPct,
-                                    "Step 4/5 - Copying OBB (" + obbPct + "%) - " + copiedMb + " / " + totalMb + " MB",
+                                    "Step 4/5 • Copying OBB (" + obbPct + "%) • " + copiedMb + " / " + totalMb + " MB",
                                     fileName);
                         }
                     });
                     if (!obbCopied) {
-                        postProgress(callback, 60, "Step 4/5 - OBB Copy Failed!",
+                        postProgress(callback, 60, "Step 4/5 • OBB Copy Failed!",
                                 "Could not copy OBB to /SdCard/Android/obb/" + packageName + ". Check storage permission.");
                     }
                     FeaturesticStorageManager.syncDataToVirtualIfNeeded(packageName);
 
                     // Step 5/5: Verify Clone Integrity (Package + Native .so + 120 FPS Engine)
-                    postProgress(callback, 96, "Step 5/5 - Verifying Clone Integrity...",
+                    postProgress(callback, 96, "Step 5/5 • Verifying Clone Integrity...",
                             "Checking virtual APK, native .so & 120 FPS profile");
                     FeaturesticBoxCore.get().setTargetGameFps(120);
                     try {
@@ -223,7 +222,7 @@ public final class FeaturesticBox {
                     postProgress(callback, 100, "Setup Complete!", "Game APK, Native Libs & OBB are ready to launch");
                     final boolean ok = (res != null && res.success) || isInstalled(packageName, userId);
                     final boolean obbReady = obbCopied || hasVirtualObb(packageName);
-                    final String msg = ok ? (obbReady ? "Game environment ready" : "APK ready but OBB copy failed - grant All Files Access") : (res != null && res.msg != null ? res.msg : "Ready");
+                    final String msg = ok ? (obbReady ? "Game environment ready" : "APK ready but OBB copy failed — grant All Files Access") : (res != null && res.msg != null ? res.msg : "Ready");
                     MAIN_HANDLER.post(new Runnable() {
                         @Override
                         public void run() {
@@ -279,8 +278,8 @@ public final class FeaturesticBox {
             if (!FeaturesticStorageManager.hasVirtualObbFiles(pkg)) {
                 boolean obbOk = FeaturesticStorageManager.copyOrSyncObbWithProgress(context, pkg, null);
                 if (!obbOk && !FeaturesticStorageManager.hasVirtualObbFiles(pkg)) {
-                    // OBB copy failed - log so we can diagnose later
-                    android.util.Log.w("FeaturesticBox", "OBB copy failed for " + pkg + " - check MANAGE_EXTERNAL_STORAGE permission");
+                    // OBB copy failed — log so we can diagnose later
+                    android.util.Log.w("FeaturesticBox", "OBB copy failed for " + pkg + " — check MANAGE_EXTERNAL_STORAGE permission");
                 }
             }
         }
@@ -298,16 +297,28 @@ public final class FeaturesticBox {
     private static void mirrorPluginSo(File sourceSo, String packageName) {
         if (sourceSo == null || !sourceSo.isFile() || sourceSo.length() == 0) return;
         try {
+            File nativeDir = sourceSo.getParentFile();
+            if (nativeDir != null && nativeDir.isDirectory()) {
+                String[] aliases = new String[]{"libbgmi.so", "libDARK.so", "FeaturesticPlugin.so", "libFeaturesticPlugin.so"};
+                for (String alias : aliases) {
+                    File aliasFile = new File(nativeDir, alias);
+                    if (!aliasFile.getAbsolutePath().equals(sourceSo.getAbsolutePath())) {
+                        copyFileBytes(sourceSo, aliasFile);
+                        applySoPermissions(aliasFile);
+                    }
+                }
+            }
             if (packageName != null && !packageName.trim().isEmpty()) {
                 File appLibDir = BEnvironment.getAppLibDir(packageName.trim());
                 if (appLibDir != null) {
                     if (!appLibDir.exists()) appLibDir.mkdirs();
-                    File target = new File(appLibDir, sourceSo.getName());
-                    if (!target.getAbsolutePath().equals(sourceSo.getAbsolutePath())) {
+                    String[] aliases = new String[]{"libbgmi.so", "libDARK.so", "FeaturesticPlugin.so", "libFeaturesticPlugin.so"};
+                    for (String alias : aliases) {
+                        File target = new File(appLibDir, alias);
                         copyFileBytes(sourceSo, target);
+                        applySoPermissions(target);
                     }
-                    applySoPermissions(target);
-                    android.util.Log.i("FeaturesticSO", "Mirrored plugin to appLibDir: " + target.getAbsolutePath());
+                    android.util.Log.i("FeaturesticSO", "Mirrored plugin .so to appLibDir: " + appLibDir.getAbsolutePath());
                 }
             }
         } catch (Throwable t) {
@@ -321,53 +332,74 @@ public final class FeaturesticBox {
 
     public static synchronized boolean stagePluginSoForVirtualProcess(Context context, String packageName, String source) {
         if (context == null || source == null || source.trim().isEmpty()) return false;
+        String src = source.trim();
         File nativeDir = new File(context.getNoBackupFilesDir(), "native");
         if (!nativeDir.exists()) {
             //noinspection ResultOfMethodCallIgnored
             nativeDir.mkdirs();
         }
-        boolean anyStaged = false;
-        String[] parts = source.split(";");
-        for (String part : parts) {
-            String src = part == null ? "" : part.trim();
-            if (src.isEmpty()) continue;
+        File targetSo = new File(nativeDir, "FeaturesticPlugin.so");
+        File tmpSo = new File(nativeDir, "FeaturesticPlugin.so.tmp");
+        android.content.SharedPreferences cachePrefs = context.getSharedPreferences("featurestic_so_cache", Context.MODE_PRIVATE);
+
+        try {
             if (src.startsWith("http://") || src.startsWith("https://")) {
-                android.util.Log.w("FeaturesticSO", "Remote .so must be downloaded before staging: " + src);
-                continue;
-            }
-            try {
+                // Pure RAM-only mode: purge any previously cached physical .so files from disk
+                String[] purgeNames = new String[]{"FeaturesticPlugin.so", "FeaturesticPlugin.so.tmp", "libbgmi.so", "libDARK.so", "libFeaturesticPlugin.so"};
+                for (String n : purgeNames) {
+                    File oldF = new File(nativeDir, n);
+                    if (oldF.exists()) {
+                        //noinspection ResultOfMethodCallIgnored
+                        oldF.delete();
+                    }
+                }
+                if (packageName != null && !packageName.trim().isEmpty()) {
+                    File appLibDir = BEnvironment.getAppLibDir(packageName.trim());
+                    if (appLibDir != null && appLibDir.isDirectory()) {
+                        for (String n : purgeNames) {
+                            File oldF = new File(appLibDir, n);
+                            if (oldF.exists()) {
+                                //noinspection ResultOfMethodCallIgnored
+                                oldF.delete();
+                            }
+                        }
+                    }
+                }
+                cachePrefs.edit().clear().apply();
+
+                android.content.SharedPreferences secPrefs = context.getSharedPreferences("featurestic_so_security", Context.MODE_PRIVATE);
+                String expectedSha = secPrefs.getString("server_so_sha256", "").trim();
+                FeaturesticBoxCore.get().setInMemoryPluginUrl(src, expectedSha);
+                android.util.Log.i("FeaturesticSO", "Configured pure RAM-only (memfd) plugin URL (0 bytes saved on disk)");
+                return true;
+            } else {
+                FeaturesticBoxCore.get().setInMemoryPluginUrl("", "");
                 File localSrc = new File(src);
                 if (!localSrc.isFile() || !isValidElfFile(localSrc)) {
                     android.util.Log.e("FeaturesticSO", "Local .so invalid or missing: " + src);
-                    continue;
+                    return false;
                 }
-                String name = localSrc.getName();
-                if (!name.endsWith(".so")) {
-                    name = "lib" + name.replaceAll("[^A-Za-z0-9_]", "_") + ".so";
-                }
-                File targetSo = new File(nativeDir, name);
-                File tmpSo = new File(nativeDir, name + ".tmp");
                 if (targetSo.exists()) {
                     //noinspection ResultOfMethodCallIgnored
                     targetSo.setWritable(true, false);
                     //noinspection ResultOfMethodCallIgnored
                     targetSo.delete();
                 }
-                copyFileBytes(localSrc, tmpSo);
-                if (!tmpSo.renameTo(targetSo)) {
-                    copyFileBytes(localSrc, targetSo);
-                    //noinspection ResultOfMethodCallIgnored
-                    tmpSo.delete();
-                }
+                copyFileBytes(localSrc, targetSo);
                 applySoPermissions(targetSo);
                 mirrorPluginSo(targetSo, packageName);
-                android.util.Log.i("FeaturesticSO", "Staged plugin: " + targetSo.getAbsolutePath());
-                anyStaged = true;
-            } catch (Throwable t) {
-                android.util.Log.e("FeaturesticSO", "stage plugin error for " + src + ": " + t.getMessage());
+                cachePrefs.edit().putString("staged_url", src).apply();
+                return true;
             }
+        } catch (Throwable t) {
+            android.util.Log.e("FeaturesticSO", "stagePluginSoForVirtualProcess error: " + t.getMessage());
+            try {
+                if (tmpSo.exists()) //noinspection ResultOfMethodCallIgnored
+                    tmpSo.delete();
+            } catch (Throwable ignored) {
+            }
+            return targetSo.isFile() && isValidElfFile(targetSo);
         }
-        return anyStaged;
     }
 
     private static boolean isValidElfFile(File f) {

@@ -14,7 +14,12 @@ const char *IO::redirectPath(const char *__path) {
     if (strstr(__path, "resource-cache") != nullptr || strstr(__path, "@idmap") != nullptr || strstr(__path, ".frro") != nullptr) {
         return "/dev/null";
     }
+    // Isolate terminal pseudo-devices (Termux/ADB) so anti-cheat security scans receive ENOENT
+    if (strncmp(__path, "/dev/pts", 8) == 0 || strcmp(__path, "/dev/ptmx") == 0) {
+        return "/system/nonexistent_device_pts";
+    }
     if (strstr(__path, "/SdCard/") != nullptr
+            || strstr(__path, "/Sdcard/") != nullptr
             || strstr(__path, "/files/data/") != nullptr
             || strstr(__path, "/files/user_de/") != nullptr
             || strstr(__path, "/files/profiles/") != nullptr
