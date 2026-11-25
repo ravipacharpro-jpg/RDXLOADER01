@@ -6,6 +6,7 @@ build/
 FeaturesticBox/build/
 FeaturesticBox/.cxx/
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.aar
 merge_work_new/
 fresh_splash_aar/
