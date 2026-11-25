@@ -24,16 +24,17 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Set up Android SDK and NDK
+      - name: Set up Android SDK command-line tools
         uses: android-actions/setup-android@v3
         with:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
-          packages: |
-            platforms;android-36
-            build-tools;36.0.0
-            ndk;27.2.12479018
-            cmake;3.22.1
+          packages: 'platform-tools'
+
+      - name: Install Android SDK platform, build tools and NDK
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
 
       - name: Generate RDX launcher and dashboard icons
         run: |
