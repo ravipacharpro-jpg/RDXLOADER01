@@ -956,7 +956,7 @@
                     android:id="@+id/tvInstalledTag"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Installed : 0.0.1"
+                    android:text="Installed : 0.0.2"
                     android:textColor="#CFD8E8"
                     android:textSize="11sp"
                     android:textStyle="bold" />
@@ -1028,7 +1028,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loader (v0.0.1)"
+                    android:text="Loader (v0.0.2)"
                     android:textColor="#AFC0D8"
                     android:textSize="10sp"
                     android:layout_marginTop="2dp" />

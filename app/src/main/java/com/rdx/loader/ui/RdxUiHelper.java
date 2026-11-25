@@ -32,9 +32,13 @@ public final class RdxUiHelper {
         if (idName == null) return;
 
         if (idName.startsWith("pill")) {
-            root.setBackgroundResource(R.drawable.bg_rdx_status);
+            if (root.getBackground() == null) {
+                root.setBackgroundResource(R.drawable.bg_rdx_status);
+            }
         } else if (idName.startsWith("btn") || idName.startsWith("card")) {
-            root.setBackgroundResource(R.drawable.bg_rdx_glass_button);
+            if (root.getBackground() == null) {
+                root.setBackgroundResource(R.drawable.bg_rdx_glass_button);
+            }
         } else {
             return;
         }

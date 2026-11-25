@@ -44,7 +44,7 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressBar pbLoginLoading;
     private View btnAudioToggleLogin;
 
-    private boolean isPasswordVisible = false;
+    private boolean isPasswordVisible = true;
     private boolean isVerifying = false;
 
     @Override
@@ -179,6 +179,9 @@ public class LoginActivity extends AppCompatActivity {
                     if (item != null && item.getText() != null) {
                         String pasted = item.getText().toString().trim();
                         if (!pasted.isEmpty()) {
+                            etLicenseKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                            isPasswordVisible = true;
+                            btnTogglePassword.setAlpha(1.0f);
                             etLicenseKey.setText(pasted);
                             etLicenseKey.setSelection(etLicenseKey.getText().length());
                             Toast.makeText(this, "License Key Pasted", Toast.LENGTH_SHORT).show();
@@ -197,10 +200,10 @@ public class LoginActivity extends AppCompatActivity {
             isPasswordVisible = !isPasswordVisible;
             if (isPasswordVisible) {
                 etLicenseKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-                btnTogglePassword.setAlpha(0.6f);
+                btnTogglePassword.setAlpha(1.0f);
             } else {
                 etLicenseKey.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                btnTogglePassword.setAlpha(1.0f);
+                btnTogglePassword.setAlpha(0.5f);
             }
             etLicenseKey.setSelection(etLicenseKey.getText().length());
         });

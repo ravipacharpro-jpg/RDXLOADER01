@@ -177,8 +177,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Password"
-                        android:textColor="#CFD8E8"
+                        android:text="License Key"
+                        android:textColor="#E2E8F0"
                         android:textSize="11sp"
                         android:textStyle="bold" />
 
@@ -187,11 +187,11 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@null"
-                        android:hint="Enter Key"
-                        android:textColorHint="#AFC0D8"
+                        android:hint="Enter or paste license key"
+                        android:textColorHint="#94A3B8"
                         android:textColor="#FFFFFF"
                         android:textSize="14sp"
-                        android:inputType="textPassword"
+                        android:inputType="textVisiblePassword"
                         android:singleLine="true"
                         android:padding="0dp"
                         android:textCursorDrawable="@null" />
@@ -248,7 +248,7 @@
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:background="@drawable/bg_rdx_glass_button"
+                android:background="@drawable/bg_rdx_btn_primary"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -301,7 +301,7 @@
                 android:id="@+id/tvVersion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Loader (v0.0.1)"
+                android:text="Loader (v0.0.2)"
                 android:textColor="#AFC0D8"
                 android:textSize="10sp"
                 android:layout_marginTop="2dp" />

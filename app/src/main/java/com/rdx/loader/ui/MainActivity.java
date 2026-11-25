@@ -540,12 +540,19 @@ public class MainActivity extends AppCompatActivity {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_notifications);
-        RdxUiHelper.decorate(dialog.getWindow().getDecorView());
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-            dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().setGravity(Gravity.CENTER);
+            Window w = dialog.getWindow();
+            w.setBackgroundDrawableResource(android.R.color.transparent);
+            w.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+            w.setGravity(Gravity.CENTER);
+            w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            w.setDimAmount(0.85f);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                w.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+                w.getAttributes().setBlurBehindRadius(35);
+            }
         }
+        RdxUiHelper.decorate(dialog.getWindow().getDecorView());
 
         View btnDismiss = dialog.findViewById(R.id.btnDismissNotification);
         if (btnDismiss != null) {
@@ -559,13 +566,20 @@ public class MainActivity extends AppCompatActivity {
         Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_game_menu);
-        RdxUiHelper.decorate(dialog.getWindow().getDecorView());
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-            dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().setGravity(Gravity.BOTTOM);
-            dialog.getWindow().getAttributes().windowAnimations = android.R.style.Animation_Dialog;
+            Window w = dialog.getWindow();
+            w.setBackgroundDrawableResource(android.R.color.transparent);
+            w.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+            w.setGravity(Gravity.BOTTOM);
+            w.getAttributes().windowAnimations = android.R.style.Animation_Dialog;
+            w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            w.setDimAmount(0.85f);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                w.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+                w.getAttributes().setBlurBehindRadius(35);
+            }
         }
+        RdxUiHelper.decorate(dialog.getWindow().getDecorView());
 
         View btnSync = dialog.findViewById(R.id.btnMenuSyncObb);
         if (btnSync != null) {
