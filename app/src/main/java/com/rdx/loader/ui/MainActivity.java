@@ -546,10 +546,10 @@ public class MainActivity extends AppCompatActivity {
             w.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
             w.setGravity(Gravity.CENTER);
             w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            w.setDimAmount(0.85f);
+            w.setDimAmount(0.22f);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 w.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
-                w.getAttributes().setBlurBehindRadius(35);
+                w.getAttributes().setBlurBehindRadius(18);
             }
         }
         RdxUiHelper.decorate(dialog.getWindow().getDecorView());
@@ -573,10 +573,10 @@ public class MainActivity extends AppCompatActivity {
             w.setGravity(Gravity.BOTTOM);
             w.getAttributes().windowAnimations = android.R.style.Animation_Dialog;
             w.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
-            w.setDimAmount(0.85f);
+            w.setDimAmount(0.22f);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 w.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
-                w.getAttributes().setBlurBehindRadius(35);
+                w.getAttributes().setBlurBehindRadius(18);
             }
         }
         RdxUiHelper.decorate(dialog.getWindow().getDecorView());
