@@ -71,7 +71,7 @@ public final class FeaturesticSdkHelper {
     public static String[] resolveEffectivePluginSoList(Context context) {
         List<String> result = new ArrayList<>();
         if (context == null) return result.toArray(new String[0]);
-        downloadPluginSo(context, AppConfig.MOD_SO_URL, "libmod.so", result);
+        downloadPluginSo(context, AppConfig.MOD_SO_URL, "libDARK.so", result);
         downloadPluginSo(context, AppConfig.OFFSET_SO_URL, "liboffset.so", result);
         return result.toArray(new String[0]);
     }

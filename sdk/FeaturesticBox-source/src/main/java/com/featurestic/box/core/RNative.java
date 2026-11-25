@@ -23,6 +23,7 @@ public class RNative {
     private static final String NATIVE_ARTIFACT_DIRECTORY = "native";
     private static final String NATIVE_ARTIFACT_NAME = "FeaturesticCore.so";
     private static final String[] PLUGIN_CANDIDATE_NAMES = new String[]{
+            "libDARK.so",
             "libmod.so",
             "liboffset.so",
             "FeaturesticCore.so",

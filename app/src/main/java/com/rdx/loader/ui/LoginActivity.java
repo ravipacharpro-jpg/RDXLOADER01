@@ -42,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     private View btnLoginContent;
     private TextView tvLoginBtnText;
     private ProgressBar pbLoginLoading;
-    private ImageView btnAudioToggleLogin;
+    private View btnAudioToggleLogin;
 
     private boolean isPasswordVisible = false;
     private boolean isVerifying = false;

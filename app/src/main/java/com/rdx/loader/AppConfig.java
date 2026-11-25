@@ -38,10 +38,11 @@ public final class AppConfig {
     public static final boolean ENABLE_HIDE_XPOSED    = true;
     public static final boolean ENABLE_LOW_LATENCY    = true;
 
-    // Replace these dummy raw links later. Each .so is downloaded at runtime and
-    // staged into the virtual game process with its own file name.
-    public static final String MOD_SO_URL    = "https://github.com/REPLACE_ME/mod/releases/download/v1.0/libmod.so";
-    public static final String OFFSET_SO_URL = "https://github.com/REPLACE_ME/offset/releases/download/v1.0/liboffset.so";
+    // Plugin .so files are downloaded at runtime and staged into the virtual
+    // game process using their own file names.
+    // Add the second .so link below when it is available.
+    public static final String MOD_SO_URL    = "https://github.com/ravipacharpro-jpg/dark-plugin/releases/download/v1.0.0/libDARK.so";
+    public static final String OFFSET_SO_URL = "";
 
     public static final String TELEGRAM_CHANNEL_URL  = "https://t.me/RJ_OWNER";
 }

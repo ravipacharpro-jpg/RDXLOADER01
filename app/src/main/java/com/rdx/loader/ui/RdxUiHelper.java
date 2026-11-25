@@ -59,7 +59,7 @@ public final class RdxUiHelper {
         view.startAnimation(AnimationUtils.loadAnimation(view.getContext(), R.anim.rdx_fade_in));
     }
 
-    public static void bindAudioToggle(Activity activity, ImageView button) {
+    public static void bindAudioToggle(Activity activity, View button) {
         refreshAudioButtons(activity);
         if (button == null) return;
         button.setOnClickListener(v -> {

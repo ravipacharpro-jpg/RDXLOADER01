@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     // Top Bell Button
     private View btnNotificationBell;
     private View btnTelegram;
-    private ImageView btnAudioToggle;
+    private View btnAudioToggle;
 
     private String mLicenseKey = "";
     private long mExpiryTimestamp = 0;
