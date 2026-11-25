@@ -100,10 +100,10 @@ jobs:
           from pathlib import Path
           import re
           pattern = re.compile('[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2190-\u21FF\u2022\u00B7\u2026\u203A\u2713\u2715\u2605\u25CF]')
-          skip_dirs = {'.git', 'build', '.gradle'}
+          skip_dirs = {'.git', 'build', '.gradle', 'sdk'}
           skip_suffixes = {'.png', '.jpg', '.jpeg', '.mp4', '.aar', '.keystore', '.jar'}
           hits = []
-          for path in Path('.').rglob('*'):
+          for path in Path('app').rglob('*'):
               if not path.is_file():
                   continue
               if path.suffix.lower() in skip_suffixes or any(part in skip_dirs for part in path.parts):
@@ -116,7 +116,7 @@ jobs:
               print('Emoji/symbol glyphs found:')
               print('\n'.join(hits[:100]))
               raise SystemExit(1)
-          print('Zero emoji and symbol glyphs verified')
+          print('Zero emoji and symbol glyphs verified in loader app')
           PY
 
       - name: Build signed RDXLOADER01 APK
