@@ -29,7 +29,7 @@ public final class RdxUiHelper {
             }
         }
         String idName = idName(root);
-        if (idName == null) return;
+        if (idName == null || idName.endsWith("Content")) return;
 
         if (idName.startsWith("pill")) {
             if (root.getBackground() == null) {

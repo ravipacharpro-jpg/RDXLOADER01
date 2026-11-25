@@ -597,20 +597,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        View btnOpenFloating = dialog.findViewById(R.id.btnMenuOpenFloating);
-        if (btnOpenFloating != null) {
-            btnOpenFloating.setOnClickListener(v -> {
-                dialog.dismiss();
-                if (!FeaturesticSdkHelper.hasOverlayPermission(MainActivity.this)) {
-                    FeaturesticSdkHelper.requestOverlayPermission(MainActivity.this);
-                } else {
-                    FloatingMenuService.start(MainActivity.this);
-                    Toast.makeText(MainActivity.this, "Floating Icon Active! Tap bubble to open Mod Menu.", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-
         View btnSendLogs = dialog.findViewById(R.id.btnMenuSendLogs);
         if (btnSendLogs != null) {
             btnSendLogs.setOnClickListener(v -> {
