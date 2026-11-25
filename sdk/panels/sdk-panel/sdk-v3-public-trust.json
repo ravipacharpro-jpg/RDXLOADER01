@@ -1,0 +1,6 @@
+{
+  "contract_version": 3,
+  "key_id": "featuresticbox-v3-default",
+  "ecdh_public_key_b64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEB29pg0xCTlBN53BaKguW6i5SnVhgBEZzls1++Md1h2DxYTEyrOvFJQ345ivm62aR62foDZdPE/r+JPCwuCqODg==",
+  "signing_public_key_b64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECBYEaNJQjpYq6b2g2eEyr79030B+YBIT7car6HCsGlEBGmdn+lPuXs0i89cFgJIbL52i8GrMCjBl03YqqIwEqA=="
+}

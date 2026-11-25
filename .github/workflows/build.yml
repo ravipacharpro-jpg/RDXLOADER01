@@ -1,0 +1,143 @@
+name: Build RDXLOADER01
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout RDXLOADER01 source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK and NDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          build-tools: 36.0.0
+          ndk: 27.2.12479018
+          cmake: 3.22.1
+
+      - name: Generate RDX launcher and dashboard icons
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+
+          src = Path('branding/rdx_icon.jpg')
+          res = Path('app/src/main/res')
+          if not src.is_file():
+              raise SystemExit('RDX icon source missing: %s' % src)
+          image = Image.open(src).convert('RGBA')
+          (res / 'drawable').mkdir(parents=True, exist_ok=True)
+          image.resize((512, 512), Image.Resampling.LANCZOS).save(res / 'drawable/rdx_icon.png')
+
+          densities = {
+              'mipmap-mdpi': 48,
+              'mipmap-hdpi': 72,
+              'mipmap-xhdpi': 96,
+              'mipmap-xxhdpi': 144,
+              'mipmap-xxxhdpi': 192,
+          }
+          for folder, size in densities.items():
+              target = res / folder
+              target.mkdir(parents=True, exist_ok=True)
+              resized = image.resize((size, size), Image.Resampling.LANCZOS)
+              resized.save(target / 'ic_launcher.png')
+              resized.save(target / 'ic_launcher_round.png')
+          print('RDX icons generated')
+          PY
+
+      - name: Rebuild FeaturesticBox SDK AAR from source
+        run: |
+          chmod +x sdk/gradlew
+          (cd sdk && ./gradlew :FeaturesticBox:assembleRelease --no-daemon --stacktrace)
+          AAR=$(find sdk/FeaturesticBox-source/build/outputs/aar -name '*-release.aar' -type f | head -n 1)
+          if [ -z "$AAR" ]; then
+            echo "SDK release AAR was not produced"
+            exit 1
+          fi
+          mkdir -p app/libs
+          cp "$AAR" app/libs/FeaturesticBox-release.aar
+          ls -lh app/libs/FeaturesticBox-release.aar
+
+      - name: Generate RDX release keystore
+        run: |
+          mkdir -p keystore
+          keytool -genkeypair \
+            -alias rdx \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -keystore keystore/release.keystore \
+            -storepass rdx2026 \
+            -keypass rdx2026 \
+            -dname "CN=RDXLOADER01, OU=RDX, O=RDX LOADER, L=NA, S=NA, C=IN" \
+            -noprompt
+
+      - name: Verify no emoji or text-symbol glyphs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          pattern = re.compile('[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F\u2190-\u21FF\u2022\u00B7\u2026\u203A\u2713\u2715\u2605\u25CF]')
+          skip_dirs = {'.git', 'build', '.gradle'}
+          skip_suffixes = {'.png', '.jpg', '.jpeg', '.mp4', '.aar', '.keystore', '.jar'}
+          hits = []
+          for path in Path('.').rglob('*'):
+              if not path.is_file():
+                  continue
+              if path.suffix.lower() in skip_suffixes or any(part in skip_dirs for part in path.parts):
+                  continue
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              for number, line in enumerate(text.splitlines(), 1):
+                  if pattern.search(line):
+                      hits.append('%s:%d' % (path, number))
+          if hits:
+              print('Emoji/symbol glyphs found:')
+              print('\n'.join(hits[:100]))
+              raise SystemExit(1)
+          print('Zero emoji and symbol glyphs verified')
+          PY
+
+      - name: Build signed RDXLOADER01 APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean assembleDebug assembleRelease --no-daemon --stacktrace
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/app-release.apk
+          ls -lh dist/app-release.apk
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: RDXLOADER01-APK
+          path: |
+            dist/app-release.apk
+            app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish release v0.0.1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view v0.0.1 >/dev/null 2>&1 && gh release delete v0.0.1 --yes --cleanup-tag || true
+          git push origin --delete v0.0.1 >/dev/null 2>&1 || true
+          gh release create v0.0.1 dist/app-release.apk#app-release.apk \
+            --title "RDXLOADER01 v0.0.1" \
+            --notes "RDX LOADER release. Install app-release.apk on Android." \
+            --target "$GITHUB_SHA"

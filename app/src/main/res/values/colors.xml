@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Backgrounds & Surfaces -->
+    <color name="bg_screen">#F8FAFC</color>
+    <color name="frosted_surface">#CCFFFFFF</color>
+    <color name="frosted_sheet">#E6F8FAFC</color>
+    <color name="card_border">#E2E8F0</color>
+    <color name="hairline_white">#EFFFFFFF</color>
+
+    <!-- Typography -->
+    <color name="text_title">#0F172A</color>
+    <color name="text_body">#334155</color>
+    <color name="text_muted">#64748B</color>
+    <color name="text_subtle">#94A3B8</color>
+    <color name="text_white">#FFFFFF</color>
+
+    <!-- Accents & Buttons -->
+    <color name="btn_dark">#0F1115</color>
+    <color name="btn_dark_pressed">#1E222A</color>
+    <color name="accent_green">#16A34A</color>
+    <color name="status_green_bg">#DCFCE7</color>
+    <color name="status_green_text">#15803D</color>
+    <color name="status_green_dot">#22C55E</color>
+    <color name="accent_red">#EF4444</color>
+    <color name="accent_blue">#2563EB</color>
+
+    <!-- Legacy / Compatibility Colors -->
+    <color name="apple_bg_obsidian">#07090E</color>
+    <color name="apple_glass_surface">#161B26</color>
+    <color name="apple_glass_elevated">#1E2534</color>
+    <color name="apple_hairline_border">#28FFFFFF</color>
+    <color name="apple_blue">#0A84FF</color>
+    <color name="apple_indigo">#5E5CE6</color>
+    <color name="apple_green">#30D158</color>
+    <color name="apple_amber">#FF9F0A</color>
+    <color name="apple_red">#FF453A</color>
+    <color name="apple_cyan">#64D2FF</color>
+    <color name="apple_text_primary">#F5F5F7</color>
+    <color name="apple_text_secondary">#8E8E93</color>
+</resources>

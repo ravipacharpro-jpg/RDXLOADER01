@@ -1,0 +1,13 @@
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+FeaturesticBox/build/
+FeaturesticBox/.cxx/
+*.jar
+*.aar
+merge_work_new/
+fresh_splash_aar/
+aar_download/
+aar_unpack/
