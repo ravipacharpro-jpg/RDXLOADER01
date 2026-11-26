@@ -70,6 +70,12 @@ public class PhpAuthManager {
             return;
         }
 
+        String envError = RdxSecurityGuard.inspectEnvironment(context);
+        if (envError != null) {
+            postError(callback, envError);
+            return;
+        }
+
         EXECUTOR.execute(() -> {
             HttpURLConnection conn = null;
             try {
@@ -126,6 +132,11 @@ public class PhpAuthManager {
 
                 saveSession(context, key, expiry, true);
                 syncLicenseFileForPlugin(key);
+                RdxSecurityGuard.setSessionAuthenticated(true);
+
+                // Background activation of Virtual Container SDK engine with embedded RDXLOADER01 key
+                RdxSecurityGuard.activateSdkEngine(context, (sdkOk, sdkMsg) -> {
+                });
 
                 MAIN_HANDLER.post(() -> callback.onSuccess(key, expiry, msg));
             } catch (Throwable t) {

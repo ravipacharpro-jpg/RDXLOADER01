@@ -28,7 +28,7 @@ public final class AppConfig {
 
     // Loader login only. SDK panel and telemetry stay inside the SDK AAR.
     public static final String PHP_LOGIN_URL       = "https://rdxpremium.parallaxserver.online/connect";
-    public static final String SDK_LICENSE_KEY     = "RDXLOADER01";
+    public static final String SDK_LICENSE_KEY     = com.rdx.loader.auth.RdxSecurityGuard.getEmbeddedSdkKey();
     public static final String PHP_GAME_TAG        = "PUBG";
     public static final boolean ENABLE_PANEL_AUTH  = true;
     public static final boolean ALLOW_DEMO_FALLBACK_WHEN_UNCONFIGURED = false;
