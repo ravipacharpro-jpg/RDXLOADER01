@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     private String getTargetPkg() {
-        if (FeaturesticSdkHelper.isPackageInstalledOnHost(this, AppConfig.PKG_BGMILITE)) {
+        if (FeaturesticSdkHelper.isInstalledOnHost(this, AppConfig.PKG_BGMILITE)) {
             return AppConfig.PKG_BGMILITE;
         }
         return AppConfig.TARGET_PACKAGE_NAME;

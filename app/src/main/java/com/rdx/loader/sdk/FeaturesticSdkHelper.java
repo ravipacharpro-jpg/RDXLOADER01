@@ -284,6 +284,10 @@ public final class FeaturesticSdkHelper {
         return FeaturesticBox.isGameInstalledOnHost(context, packageName);
     }
 
+    public static boolean isPackageInstalledOnHost(Context context, String packageName) {
+        return isInstalledOnHost(context, packageName);
+    }
+
     public static boolean hasHostObbFiles(Context context, String packageName) {
         return !FileCopyTask.findSourceObbFiles(context, packageName).isEmpty();
     }
