@@ -112,7 +112,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:layout_gravity="center"
-                        android:src="@drawable/ic_audio_off"
+                        android:src="@drawable/ic_audio_on"
                         android:contentDescription="Audio toggle" />
                 </FrameLayout>
 

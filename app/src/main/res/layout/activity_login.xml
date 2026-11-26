@@ -90,7 +90,7 @@
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_audio_off"
+                    android:src="@drawable/ic_audio_on"
                     android:contentDescription="Audio toggle" />
             </FrameLayout>
         </LinearLayout>

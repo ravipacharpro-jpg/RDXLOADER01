@@ -104,9 +104,6 @@ public class MainActivity extends AppCompatActivity {
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     private String getTargetPkg() {
-        if (FeaturesticSdkHelper.isInstalledOnHost(this, AppConfig.PKG_BGMILITE)) {
-            return AppConfig.PKG_BGMILITE;
-        }
         return AppConfig.TARGET_PACKAGE_NAME;
     }
 
@@ -422,8 +419,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupGameCard() {
         String curPkg = getTargetPkg();
-        boolean isLite = AppConfig.PKG_BGMILITE.equals(curPkg);
-        tvGameName.setText(isLite ? "BGMI Lite (Low-End)" : AppConfig.TARGET_GAME_NAME);
+        tvGameName.setText(AppConfig.TARGET_GAME_NAME);
         tvGamePackage.setText("Package : " + curPkg);
         tvGameSupported.setText("Supported : " + AppConfig.SUPPORTED_VERSION);
 

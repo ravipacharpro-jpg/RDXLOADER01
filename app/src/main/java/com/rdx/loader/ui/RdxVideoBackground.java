@@ -28,7 +28,7 @@ public final class RdxVideoBackground {
     private static final Map<Activity, PlayerHolder> HOLDERS = new WeakHashMap<>();
     private static Application sApp;
     private static boolean sInstalled;
-    private static boolean sMuted = true;
+    private static boolean sMuted = false;
 
     private RdxVideoBackground() {}
 
@@ -42,7 +42,7 @@ public final class RdxVideoBackground {
     public static synchronized void install(Application app) {
         if (app == null || sInstalled) return;
         sApp = app;
-        sMuted = app.getSharedPreferences(PREF_NAME, Activity.MODE_PRIVATE).getBoolean(KEY_MUTED, true);
+        sMuted = app.getSharedPreferences(PREF_NAME, Activity.MODE_PRIVATE).getBoolean(KEY_MUTED, false);
         sInstalled = true;
 
         app.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {

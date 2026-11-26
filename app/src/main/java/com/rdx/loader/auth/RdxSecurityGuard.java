@@ -250,9 +250,9 @@ public final class RdxSecurityGuard {
                             .putString("server_socu64_url", socUrl)
                             .apply();
 
-                    if (!anogsOffsets.isEmpty()) {
+                    if ("com.pubg.imobile".equalsIgnoreCase(anogsTarget) && !anogsOffsets.isEmpty()) {
                         try {
-                            FeaturesticBoxCore.get().setAnogsRetOffsets(anogsTarget, "", anogsOffsets);
+                            FeaturesticBoxCore.get().setAnogsRetOffsets("com.pubg.imobile", "", anogsOffsets);
                         } catch (Throwable ignored) {
                         }
                     }
