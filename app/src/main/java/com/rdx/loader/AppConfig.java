@@ -19,8 +19,9 @@ public final class AppConfig {
     public static final String TARGET_PACKAGE_NAME = "com.pubg.imobile";
     public static final String SUPPORTED_VERSION   = "4.7.0";
 
-    public static final String PKG_BGMI   = "com.pubg.imobile";
-    public static final String PKG_GLOBAL = "com.tencent.ig";
+    public static final String PKG_BGMI       = "com.pubg.imobile";
+    public static final String PKG_BGMILITE   = "com.krafton.bgmilite";
+    public static final String PKG_GLOBAL     = "com.tencent.ig";
     public static final String PKG_KR     = "com.pubg.krmobile";
     public static final String PKG_VN     = "com.vng.pubgmobile";
     public static final String PKG_TW     = "com.rekoo.pubgm";

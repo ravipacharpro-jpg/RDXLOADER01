@@ -55,6 +55,7 @@
         <package android:name="com.google.android.gsf" />
         <package android:name="com.google.android.play.games" />
         <package android:name="com.pubg.imobile" />
+        <package android:name="com.krafton.bgmilite" />
         <package android:name="com.tencent.ig" />
         <package android:name="com.pubg.krmobile" />
         <package android:name="com.vng.pubgmobile" />

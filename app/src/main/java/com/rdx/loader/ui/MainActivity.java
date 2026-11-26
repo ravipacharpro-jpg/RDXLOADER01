@@ -103,7 +103,13 @@ public class MainActivity extends AppCompatActivity {
     private boolean isLaunching = false;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
-    private static final String TARGET_PKG = AppConfig.TARGET_PACKAGE_NAME;
+    private String getTargetPkg() {
+        if (FeaturesticSdkHelper.isPackageInstalledOnHost(this, AppConfig.PKG_BGMILITE)) {
+            return AppConfig.PKG_BGMILITE;
+        }
+        return AppConfig.TARGET_PACKAGE_NAME;
+    }
+
     private static final String PREF_SETTINGS = "loader_v2_settings";
     private static final String KEY_HIDE_ESP = "hide_esp_enabled";
 
@@ -140,13 +146,14 @@ public class MainActivity extends AppCompatActivity {
         if (!FeaturesticSdkHelper.hasAllFilesPermission(this)) {
             return;
         }
-        if (FeaturesticSdkHelper.hasVirtualObbFiles(TARGET_PKG)) {
+        String activePkg = getTargetPkg();
+        if (FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
             return;
         }
         FileCopyTask task = new FileCopyTask(this);
-        task.installOrFixPkg(TARGET_PKG, null, (success, message) -> {
+        task.installOrFixPkg(activePkg, null, (success, message) -> {
             runOnUiThread(() -> {
-                if (success && FeaturesticSdkHelper.hasVirtualObbFiles(TARGET_PKG)) {
+                if (success && FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
                     Toast.makeText(MainActivity.this, "OBB synced successfully", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -378,7 +385,8 @@ public class MainActivity extends AppCompatActivity {
             setLaunchLoading(true, "Copying OBB...");
             Toast.makeText(this, "Copying BGMI OBB automatically, please wait...", Toast.LENGTH_SHORT).show();
             new Thread(() -> {
-                boolean ok = FeaturesticSdkHelper.copyObbFromSafTreeUri(MainActivity.this, treeUri, TARGET_PKG);
+                String curPkg = getTargetPkg();
+                boolean ok = FeaturesticSdkHelper.copyObbFromSafTreeUri(MainActivity.this, treeUri, curPkg);
                 runOnUiThread(() -> {
                     setLaunchLoading(false, "START GAME");
                     if (ok) {
@@ -388,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     } else {
                         Toast.makeText(MainActivity.this,
-                                "No .obb file found in selected folder. Select Android/obb/" + TARGET_PKG,
+                                "No .obb file found in selected folder. Select Android/obb/" + curPkg,
                                 Toast.LENGTH_LONG).show();
                     }
                 });
@@ -413,16 +421,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupGameCard() {
-        tvGameName.setText(AppConfig.TARGET_GAME_NAME);
-        tvGamePackage.setText("Package : " + TARGET_PKG);
+        String curPkg = getTargetPkg();
+        boolean isLite = AppConfig.PKG_BGMILITE.equals(curPkg);
+        tvGameName.setText(isLite ? "BGMI Lite (Low-End)" : AppConfig.TARGET_GAME_NAME);
+        tvGamePackage.setText("Package : " + curPkg);
         tvGameSupported.setText("Supported : " + AppConfig.SUPPORTED_VERSION);
 
-        // Load host installed BGMI icon and version
+        // Load host installed game icon and version
         try {
-            PackageInfo pInfo = FeaturesticSdkHelper.findHostGameInfo(this, TARGET_PKG);
+            PackageInfo pInfo = FeaturesticSdkHelper.findHostGameInfo(this, curPkg);
             if (pInfo != null) {
                 tvGameVersion.setText("Version : " + pInfo.versionName);
-                Drawable hostIcon = getPackageManager().getApplicationIcon(TARGET_PKG);
+                Drawable hostIcon = getPackageManager().getApplicationIcon(curPkg);
                 if (hostIcon != null) {
                     ivGameIcon.setImageDrawable(hostIcon);
                 } else {
@@ -625,10 +635,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean pendingLaunchAfterSafObb = false;
 
     private void syncObbFiles() {
+        String activePkg = getTargetPkg();
         setLaunchLoading(true, "Syncing OBB...");
         Toast.makeText(this, "Starting OBB sync...", Toast.LENGTH_SHORT).show();
         FileCopyTask task = new FileCopyTask(this);
-        task.installOrFixPkg(TARGET_PKG, (percent, copied, total, file) -> {
+        task.installOrFixPkg(activePkg, (percent, copied, total, file) -> {
             runOnUiThread(() -> {
                 if (isLaunching) {
                     tvLaunchLabel.setText("Syncing (" + percent + "%)");
@@ -644,10 +655,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestSafObbPermission() {
         try {
-            Toast.makeText(this, "Tap 'Use this folder' to auto-copy BGMI OBB", Toast.LENGTH_LONG).show();
-            startActivityForResult(FeaturesticSdkHelper.createObbSafPickerIntent(TARGET_PKG), REQ_SAF_OBB_TREE);
+            String activePkg = getTargetPkg();
+            Toast.makeText(this, "Tap 'Use this folder' to auto-copy OBB", Toast.LENGTH_LONG).show();
+            startActivityForResult(FeaturesticSdkHelper.createObbSafPickerIntent(activePkg), REQ_SAF_OBB_TREE);
         } catch (Throwable t) {
-            Toast.makeText(this, "Please copy OBB to /SdCard/Android/obb/" + TARGET_PKG, Toast.LENGTH_LONG).show();
+            String activePkg = getTargetPkg();
+            Toast.makeText(this, "Please copy OBB to /SdCard/Android/obb/" + activePkg, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -710,11 +723,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (!FeaturesticSdkHelper.hasVirtualObbFiles(TARGET_PKG)) {
+        String activePkg = getTargetPkg();
+        if (!FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
             setLaunchLoading(true, "Copying OBB...");
             Toast.makeText(this, "Copying game OBB automatically, please wait...", Toast.LENGTH_SHORT).show();
             FileCopyTask task = new FileCopyTask(this);
-            task.installOrFixPkg(TARGET_PKG, (percent, copied, total, file) -> {
+            task.installOrFixPkg(activePkg, (percent, copied, total, file) -> {
                 runOnUiThread(() -> {
                     if (isLaunching) {
                         tvLaunchLabel.setText("Copying OBB (" + percent + "%)");
@@ -722,7 +736,7 @@ public class MainActivity extends AppCompatActivity {
                 });
             }, (success, message) -> {
                 runOnUiThread(() -> {
-                    if (success && FeaturesticSdkHelper.hasVirtualObbFiles(TARGET_PKG)) {
+                    if (success && FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
                         launchGameNow();
                     } else {
                         setLaunchLoading(false, "START GAME");
@@ -738,7 +752,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void launchGameNow() {
         setLaunchLoading(true, "Preparing...");
-        boolean started = FeaturesticSdkHelper.launchVirtualGame(this, TARGET_PKG, () -> {
+        String activePkg = getTargetPkg();
+        boolean started = FeaturesticSdkHelper.launchVirtualGame(this, activePkg, () -> {
             setLaunchLoading(false, "START GAME");
         });
         if (!started) {
