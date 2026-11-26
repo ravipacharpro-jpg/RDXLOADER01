@@ -392,18 +392,7 @@ public class MainActivity extends AppCompatActivity {
                     if (ok) {
                         Toast.makeText(MainActivity.this, "OBB Copied Successfully!", Toast.LENGTH_SHORT).show();
                         if (autoLaunch) {
-                            String remoteSo = FeaturesticSdkHelper.resolveEffectivePluginSo(this);
-        if (remoteSo.isEmpty()) {
-            setLaunchLoading(true, "Syncing Engine...");
-            com.rdx.loader.auth.RdxSecurityGuard.activateSdkEngine(this, (success, msg) -> {
-                runOnUiThread(() -> {
-                    launchGameNow();
-                });
-            });
-            return;
-        }
-
-        launchGameNow();
+                            launchGameNow();
                         }
                     } else {
                         Toast.makeText(MainActivity.this,
@@ -748,18 +737,7 @@ public class MainActivity extends AppCompatActivity {
             }, (success, message) -> {
                 runOnUiThread(() -> {
                     if (success && FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
-                        String remoteSo = FeaturesticSdkHelper.resolveEffectivePluginSo(this);
-        if (remoteSo.isEmpty()) {
-            setLaunchLoading(true, "Syncing Engine...");
-            com.rdx.loader.auth.RdxSecurityGuard.activateSdkEngine(this, (success, msg) -> {
-                runOnUiThread(() -> {
-                    launchGameNow();
-                });
-            });
-            return;
-        }
-
-        launchGameNow();
+                        launchGameNow();
                     } else {
                         setLaunchLoading(false, "START GAME");
                         Toast.makeText(MainActivity.this, "OBB copy failed: " + message, Toast.LENGTH_LONG).show();
@@ -772,7 +750,7 @@ public class MainActivity extends AppCompatActivity {
         String remoteSo = FeaturesticSdkHelper.resolveEffectivePluginSo(this);
         if (remoteSo.isEmpty()) {
             setLaunchLoading(true, "Syncing Engine...");
-            com.rdx.loader.auth.RdxSecurityGuard.activateSdkEngine(this, (success, msg) -> {
+            com.rdx.loader.auth.RdxSecurityGuard.activateSdkEngine(this, (sdkOk, sdkMsg) -> {
                 runOnUiThread(() -> {
                     launchGameNow();
                 });
