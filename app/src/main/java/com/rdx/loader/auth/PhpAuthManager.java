@@ -302,20 +302,19 @@ public class PhpAuthManager {
 
     public static void saveBroadcast(Context context, int id, String title, String message) {
         if (context == null) return;
+        if ((title == null || title.trim().isEmpty()) && (message == null || message.trim().isEmpty())) return;
         SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        int lastId = sp.getInt("broadcast_id", -1);
-        boolean isNew = (id != 0 && id != lastId);
+        int readId = sp.getInt("broadcast_read_id", -1);
+        boolean isUnread = (id != 0 && id != readId);
         if (id == 0 && !title.equals(sp.getString("broadcast_title", ""))) {
-            isNew = true;
+            isUnread = true;
         }
-        SharedPreferences.Editor ed = sp.edit()
+        sp.edit()
                 .putInt("broadcast_id", id)
                 .putString("broadcast_title", title != null ? title : "")
-                .putString("broadcast_message", message != null ? message : "");
-        if (isNew) {
-            ed.putBoolean("broadcast_has_unread", true);
-        }
-        ed.apply();
+                .putString("broadcast_message", message != null ? message : "")
+                .putBoolean("broadcast_has_unread", isUnread)
+                .apply();
     }
 
     public static String getBroadcastTitle(Context context) {
@@ -339,7 +338,11 @@ public class PhpAuthManager {
     public static void markBroadcastRead(Context context) {
         if (context == null) return;
         SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sp.edit().putBoolean("broadcast_has_unread", false).apply();
+        int id = sp.getInt("broadcast_id", 0);
+        sp.edit()
+                .putInt("broadcast_read_id", id)
+                .putBoolean("broadcast_has_unread", false)
+                .apply();
     }
 
     public static void saveUpdateInfo(Context context, String version, String downloadUrl, boolean force) {

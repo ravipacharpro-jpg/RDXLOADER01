@@ -132,12 +132,74 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private final android.os.Handler mHeartbeatHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private boolean mIsHeartbeatRunning = false;
+    private final Runnable mHeartbeatRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!mIsHeartbeatRunning || isFinishing()) return;
+            verifyLiveSessionSilently();
+            mHeartbeatHandler.postDelayed(this, 3500);
+        }
+    };
+
     @Override
     protected void onResume() {
         super.onResume();
         refreshSocialAccountCard();
         startAutoObbSyncIfNeeded();
         verifyLiveSessionOnStart();
+        startLiveHeartbeat();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLiveHeartbeat();
+    }
+
+    private void startLiveHeartbeat() {
+        mIsHeartbeatRunning = true;
+        mHeartbeatHandler.removeCallbacks(mHeartbeatRunnable);
+        mHeartbeatHandler.postDelayed(mHeartbeatRunnable, 3500);
+    }
+
+    private void stopLiveHeartbeat() {
+        mIsHeartbeatRunning = false;
+        mHeartbeatHandler.removeCallbacks(mHeartbeatRunnable);
+    }
+
+    private void verifyLiveSessionSilently() {
+        final String savedKey = (mLicenseKey != null && !mLicenseKey.trim().isEmpty())
+                ? mLicenseKey.trim()
+                : PhpAuthManager.getSavedKey(this);
+
+        if (savedKey == null || savedKey.trim().isEmpty()) {
+            stopLiveHeartbeat();
+            redirectToLogin("Session expired. Please login.");
+            return;
+        }
+
+        PhpAuthManager.verifyKey(this, savedKey, new PhpAuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(final String licenseKey, final String expiryText, final String serverMessage) {
+                runOnUiThread(() -> {
+                    mLicenseKey = licenseKey;
+                    if (PhpAuthManager.hasUnreadBroadcast(MainActivity.this)) {
+                        showNotificationDialog();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(final String errorMessage) {
+                runOnUiThread(() -> {
+                    stopLiveHeartbeat();
+                    PhpAuthManager.clearSession(MainActivity.this);
+                    redirectToLogin(errorMessage != null ? errorMessage : "Access Denied by Server");
+                });
+            }
+        });
     }
 
     private void verifyLiveSessionOnStart() {
@@ -146,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
                 : PhpAuthManager.getSavedKey(this);
 
         if (savedKey == null || savedKey.trim().isEmpty()) {
+            stopLiveHeartbeat();
             redirectToLogin("Session expired. Please login.");
             return;
         }
@@ -165,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onError(final String errorMessage) {
                 runOnUiThread(() -> {
+                    stopLiveHeartbeat();
                     PhpAuthManager.clearSession(MainActivity.this);
                     redirectToLogin(errorMessage != null ? errorMessage : "Access Denied by Server");
                 });
@@ -201,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopLiveHeartbeat();
         if (mCountDownTimer != null) {
             mCountDownTimer.cancel();
             mCountDownTimer = null;
