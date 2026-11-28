@@ -84,6 +84,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         checkAndRefreshPermissions();
+        com.rdx.loader.update.AppUpdateManager.checkAndShowUpdate(this);
     }
 
     private void setupEdgeToEdgeWindow() {

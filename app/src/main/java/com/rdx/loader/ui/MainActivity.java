@@ -137,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         refreshSocialAccountCard();
         startAutoObbSyncIfNeeded();
+        com.rdx.loader.update.AppUpdateManager.checkAndShowUpdate(this);
         if (PhpAuthManager.hasUnreadBroadcast(this)) {
             showNotificationDialog();
         }
