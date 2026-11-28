@@ -225,13 +225,14 @@ public final class AppUpdateManager {
                         final int progress = length > 0 ? (int) ((totalCopied * 100) / length) : 0;
                         final long copiedMb = totalCopied / (1024 * 1024);
                         final long totalMb = length > 0 ? length / (1024 * 1024) : 0;
+                        final long currentCopiedKb = totalCopied / 1024;
                         sMainHandler.post(() -> {
                             if (pb != null && progress > 0) pb.setProgress(progress);
                             if (tvProgress != null) {
                                 if (totalMb > 0) {
                                     tvProgress.setText("Downloading: " + progress + "% (" + copiedMb + "/" + totalMb + " MB)");
                                 } else {
-                                    tvProgress.setText("Downloading: " + (totalCopied / 1024) + " KB...");
+                                    tvProgress.setText("Downloading: " + currentCopiedKb + " KB...");
                                 }
                             }
                         });
