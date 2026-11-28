@@ -137,10 +137,47 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         refreshSocialAccountCard();
         startAutoObbSyncIfNeeded();
-        com.rdx.loader.update.AppUpdateManager.checkAndShowUpdate(this);
-        if (PhpAuthManager.hasUnreadBroadcast(this)) {
-            showNotificationDialog();
+        verifyLiveSessionOnStart();
+    }
+
+    private void verifyLiveSessionOnStart() {
+        final String savedKey = (mLicenseKey != null && !mLicenseKey.trim().isEmpty())
+                ? mLicenseKey.trim()
+                : PhpAuthManager.getSavedKey(this);
+
+        if (savedKey == null || savedKey.trim().isEmpty()) {
+            redirectToLogin("Session expired. Please login.");
+            return;
         }
+
+        PhpAuthManager.verifyKey(this, savedKey, new PhpAuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(final String licenseKey, final String expiryText, final String serverMessage) {
+                runOnUiThread(() -> {
+                    mLicenseKey = licenseKey;
+                    com.rdx.loader.update.AppUpdateManager.checkAndShowUpdate(MainActivity.this);
+                    if (PhpAuthManager.hasUnreadBroadcast(MainActivity.this)) {
+                        showNotificationDialog();
+                    }
+                });
+            }
+
+            @Override
+            public void onError(final String errorMessage) {
+                runOnUiThread(() -> {
+                    PhpAuthManager.clearSession(MainActivity.this);
+                    redirectToLogin(errorMessage != null ? errorMessage : "Access Denied by Server");
+                });
+            }
+        });
+    }
+
+    private void redirectToLogin(String reason) {
+        Toast.makeText(this, reason, Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void startAutoObbSyncIfNeeded() {
@@ -706,9 +743,8 @@ public class MainActivity extends AppCompatActivity {
             public void onError(String errorMessage) {
                 runOnUiThread(() -> {
                     setLaunchLoading(false, "START GAME");
-                    Toast.makeText(MainActivity.this,
-                            errorMessage != null ? errorMessage : "Key disabled or expired",
-                            Toast.LENGTH_LONG).show();
+                    PhpAuthManager.clearSession(MainActivity.this);
+                    redirectToLogin(errorMessage != null ? errorMessage : "Key disabled or expired");
                 });
             }
         });

@@ -130,13 +130,13 @@ jobs:
             dist/app-release.apk
             app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Publish release v0.0.5
+      - name: Publish release v0.0.6
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view v0.0.5 >/dev/null 2>&1 && gh release delete v0.0.5 --yes --cleanup-tag || true
-          git push origin --delete v0.0.5 >/dev/null 2>&1 || true
-          gh release create v0.0.5 dist/app-release.apk#app-release.apk \
-            --title "RDXLOADER01 v0.0.5" \
-            --notes "RDX LOADER v0.0.5 release with in-app auto-update dialog and dynamic broadcast popup." \
+          gh release view v0.0.6 >/dev/null 2>&1 && gh release delete v0.0.6 --yes --cleanup-tag || true
+          git push origin --delete v0.0.6 >/dev/null 2>&1 || true
+          gh release create v0.0.6 dist/app-release.apk#app-release.apk \
+            --title "RDXLOADER01 v0.0.6" \
+            --notes "RDX LOADER v0.0.6 release. Live strict session check, instant block cutoff, and post-login popup." \
             --target "$GITHUB_SHA"

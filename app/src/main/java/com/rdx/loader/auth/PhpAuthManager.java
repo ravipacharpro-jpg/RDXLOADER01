@@ -263,8 +263,41 @@ public class PhpAuthManager {
     }
 
     public static void clearSession(Context context) {
-        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sp.edit().remove(KEY_SAVED_LICENSE).remove(KEY_SAVED_EXPIRY).apply();
+        if (context != null) {
+            SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            sp.edit().remove(KEY_SAVED_LICENSE).remove(KEY_SAVED_EXPIRY).apply();
+        }
+        wipeLicenseFilesForPlugin();
+    }
+
+    public static void wipeLicenseFilesForPlugin() {
+        String[] pkgs = new String[]{
+                AppConfig.PKG_BGMI,
+                AppConfig.PKG_GLOBAL,
+                AppConfig.PKG_KR,
+                AppConfig.PKG_VN,
+                AppConfig.PKG_TW
+        };
+        String[] bases = new String[]{
+                "/storage/emulated/0/SdCard/Android/obb",
+                "/storage/emulated/0/Sdcard/Android/obb",
+                "/storage/emulated/0/Android/obb"
+        };
+        for (String base : bases) {
+            for (String pkg : pkgs) {
+                try {
+                    java.io.File dir = new java.io.File(base, pkg);
+                    if (dir.isDirectory()) {
+                        String[] licNames = new String[]{"key.lic", "teamdark.lic", "license.lic", "user.lic"};
+                        for (String licName : licNames) {
+                            java.io.File lic = new java.io.File(dir, licName);
+                            if (lic.exists()) lic.delete();
+                        }
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }
     }
 
     public static void saveBroadcast(Context context, int id, String title, String message) {
