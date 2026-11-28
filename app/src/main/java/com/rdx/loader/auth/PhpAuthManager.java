@@ -303,12 +303,19 @@ public class PhpAuthManager {
     public static void saveBroadcast(Context context, int id, String title, String message) {
         if (context == null) return;
         SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        sp.edit()
+        int lastId = sp.getInt("broadcast_id", -1);
+        boolean isNew = (id != 0 && id != lastId);
+        if (id == 0 && !title.equals(sp.getString("broadcast_title", ""))) {
+            isNew = true;
+        }
+        SharedPreferences.Editor ed = sp.edit()
                 .putInt("broadcast_id", id)
                 .putString("broadcast_title", title != null ? title : "")
-                .putString("broadcast_message", message != null ? message : "")
-                .putBoolean("broadcast_has_unread", true)
-                .apply();
+                .putString("broadcast_message", message != null ? message : "");
+        if (isNew) {
+            ed.putBoolean("broadcast_has_unread", true);
+        }
+        ed.apply();
     }
 
     public static String getBroadcastTitle(Context context) {
