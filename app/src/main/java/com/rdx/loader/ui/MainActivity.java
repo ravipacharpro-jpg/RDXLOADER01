@@ -137,6 +137,9 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         refreshSocialAccountCard();
         startAutoObbSyncIfNeeded();
+        if (PhpAuthManager.hasUnreadBroadcast(this)) {
+            showNotificationDialog();
+        }
     }
 
     private void startAutoObbSyncIfNeeded() {
@@ -560,9 +563,23 @@ public class MainActivity extends AppCompatActivity {
         }
         RdxUiHelper.decorate(dialog.getWindow().getDecorView());
 
+        TextView tvTitle = dialog.findViewById(R.id.tvNotificationTitle);
+        TextView tvMsg = dialog.findViewById(R.id.tvNotificationMessage);
+        String bTitle = PhpAuthManager.getBroadcastTitle(this);
+        String bMsg = PhpAuthManager.getBroadcastMessage(this);
+        if (tvTitle != null && !bTitle.isEmpty()) {
+            tvTitle.setText(bTitle);
+        }
+        if (tvMsg != null && !bMsg.isEmpty()) {
+            tvMsg.setText(bMsg);
+        }
+
         View btnDismiss = dialog.findViewById(R.id.btnDismissNotification);
         if (btnDismiss != null) {
-            btnDismiss.setOnClickListener(v -> dialog.dismiss());
+            btnDismiss.setOnClickListener(v -> {
+                PhpAuthManager.markBroadcastRead(MainActivity.this);
+                dialog.dismiss();
+            });
         }
 
         dialog.show();
@@ -650,14 +667,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestSafObbPermission() {
-        try {
-            String activePkg = getTargetPkg();
-            Toast.makeText(this, "Tap 'Use this folder' to auto-copy OBB", Toast.LENGTH_LONG).show();
-            startActivityForResult(FeaturesticSdkHelper.createObbSafPickerIntent(activePkg), REQ_SAF_OBB_TREE);
-        } catch (Throwable t) {
-            String activePkg = getTargetPkg();
-            Toast.makeText(this, "Please copy OBB to /SdCard/Android/obb/" + activePkg, Toast.LENGTH_LONG).show();
-        }
+        syncObbFiles();
     }
 
     private void signOut() {
@@ -721,25 +731,18 @@ public class MainActivity extends AppCompatActivity {
 
         String activePkg = getTargetPkg();
         if (!FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
-            pendingLaunchAfterSafObb = true;
-            setLaunchLoading(true, "Copying OBB...");
-            Toast.makeText(this, "Copying game OBB automatically, please wait...", Toast.LENGTH_SHORT).show();
+            setLaunchLoading(true, "Syncing OBB...");
             FileCopyTask task = new FileCopyTask(this);
             task.installOrFixPkg(activePkg, (percent, copied, total, file) -> {
                 runOnUiThread(() -> {
                     if (isLaunching) {
-                        tvLaunchLabel.setText("Copying OBB (" + percent + "%)");
+                        tvLaunchLabel.setText("Syncing OBB (" + percent + "%)");
                     }
                 });
             }, (success, message) -> {
                 runOnUiThread(() -> {
-                    if (success && FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
-                        launchGameNow();
-                    } else {
-                        setLaunchLoading(false, "START GAME");
-                        Toast.makeText(MainActivity.this, "Requesting folder access for OBB...", Toast.LENGTH_SHORT).show();
-                        requestSafObbPermission();
-                    }
+                    setLaunchLoading(false, "START GAME");
+                    launchGameNow();
                 });
             });
             return;

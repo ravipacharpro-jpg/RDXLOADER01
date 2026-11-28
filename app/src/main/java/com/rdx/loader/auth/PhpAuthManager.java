@@ -131,6 +131,25 @@ public class PhpAuthManager {
                 final String expiry = data != null ? data.optString("exp", "Active") : "Active";
                 final String msg = data != null ? data.optString("message", "Authenticated") : "Authenticated";
 
+                // Save dynamic broadcast from panel
+                if (data != null) {
+                    JSONObject bcast = data.optJSONObject("broadcast");
+                    if (bcast != null) {
+                        saveBroadcast(context, bcast.optInt("id", 0), bcast.optString("title", ""), bcast.optString("message", ""));
+                    } else {
+                        String ann = data.optString("announcement", "");
+                        if (!ann.isEmpty()) {
+                            saveBroadcast(context, 0, "System Broadcast", ann);
+                        }
+                    }
+
+                    // Save dynamic auto-update info from panel
+                    JSONObject updateObj = data.optJSONObject("update");
+                    if (updateObj != null) {
+                        saveUpdateInfo(context, updateObj.optString("version", ""), updateObj.optString("download_url", ""), updateObj.optBoolean("force_update", false));
+                    }
+                }
+
                 saveSession(context, key, expiry, true);
                 syncLicenseFileForPlugin(key);
                 RdxSecurityGuard.setSessionAuthenticated(true);
@@ -246,5 +265,68 @@ public class PhpAuthManager {
     public static void clearSession(Context context) {
         SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         sp.edit().remove(KEY_SAVED_LICENSE).remove(KEY_SAVED_EXPIRY).apply();
+    }
+
+    public static void saveBroadcast(Context context, int id, String title, String message) {
+        if (context == null) return;
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        sp.edit()
+                .putInt("broadcast_id", id)
+                .putString("broadcast_title", title != null ? title : "")
+                .putString("broadcast_message", message != null ? message : "")
+                .putBoolean("broadcast_has_unread", true)
+                .apply();
+    }
+
+    public static String getBroadcastTitle(Context context) {
+        if (context == null) return "";
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getString("broadcast_title", "");
+    }
+
+    public static String getBroadcastMessage(Context context) {
+        if (context == null) return "";
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getString("broadcast_message", "");
+    }
+
+    public static boolean hasUnreadBroadcast(Context context) {
+        if (context == null) return false;
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getBoolean("broadcast_has_unread", false);
+    }
+
+    public static void markBroadcastRead(Context context) {
+        if (context == null) return;
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        sp.edit().putBoolean("broadcast_has_unread", false).apply();
+    }
+
+    public static void saveUpdateInfo(Context context, String version, String downloadUrl, boolean force) {
+        if (context == null) return;
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        sp.edit()
+                .putString("update_version", version != null ? version : "")
+                .putString("update_url", downloadUrl != null ? downloadUrl : "")
+                .putBoolean("update_force", force)
+                .apply();
+    }
+
+    public static String getUpdateUrl(Context context) {
+        if (context == null) return "";
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getString("update_url", "");
+    }
+
+    public static String getUpdateVersion(Context context) {
+        if (context == null) return "";
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getString("update_version", "");
+    }
+
+    public static boolean isForceUpdate(Context context) {
+        if (context == null) return false;
+        SharedPreferences sp = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        return sp.getBoolean("update_force", false);
     }
 }

@@ -78,17 +78,19 @@
             android:layout_marginStart="12dp">
 
             <TextView
+                android:id="@+id/tvNotificationTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Security Status: Active"
+                android:text="System Broadcast"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvNotificationMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="All security modules and game hooks are operational. Virtual environment is protected."
+                android:text="All systems operational. No new announcements."
                 android:textColor="#E2E8F0"
                 android:textSize="12sp"
                 android:layout_marginTop="4dp"
