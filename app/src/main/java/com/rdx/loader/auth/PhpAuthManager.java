@@ -81,7 +81,7 @@ public class PhpAuthManager {
             try {
                 String panelBase = normalizeUrl(AppConfig.PHP_LOGIN_URL);
                 if (panelBase.isEmpty()) {
-                    panelBase = "https://rdxpremium.parallaxserver.online/connect";
+                    panelBase = "https://featurestic-key-panel.vercel.app/connect";
                 }
                 while (panelBase.endsWith("/")) {
                     panelBase = panelBase.substring(0, panelBase.length() - 1);
@@ -90,7 +90,8 @@ public class PhpAuthManager {
                 String serial = computePanelSerialUuid(context, key);
                 String body = "game=PUBG"
                         + "&user_key=" + URLEncoder.encode(key, "UTF-8")
-                        + "&serial=" + URLEncoder.encode(serial, "UTF-8");
+                        + "&serial=" + URLEncoder.encode(serial, "UTF-8")
+                        + "&slug=" + URLEncoder.encode(AppConfig.LOADER_WORKSPACE_SLUG, "UTF-8");
 
                 URL url = new URL(panelBase);
                 conn = (HttpURLConnection) url.openConnection();

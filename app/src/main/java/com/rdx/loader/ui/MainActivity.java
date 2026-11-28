@@ -721,6 +721,7 @@ public class MainActivity extends AppCompatActivity {
 
         String activePkg = getTargetPkg();
         if (!FeaturesticSdkHelper.hasVirtualObbFiles(activePkg)) {
+            pendingLaunchAfterSafObb = true;
             setLaunchLoading(true, "Copying OBB...");
             Toast.makeText(this, "Copying game OBB automatically, please wait...", Toast.LENGTH_SHORT).show();
             FileCopyTask task = new FileCopyTask(this);
@@ -736,7 +737,8 @@ public class MainActivity extends AppCompatActivity {
                         launchGameNow();
                     } else {
                         setLaunchLoading(false, "START GAME");
-                        Toast.makeText(MainActivity.this, "OBB copy failed: " + message, Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "Requesting folder access for OBB...", Toast.LENGTH_SHORT).show();
+                        requestSafObbPermission();
                     }
                 });
             });

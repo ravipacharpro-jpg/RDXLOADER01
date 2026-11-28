@@ -26,8 +26,9 @@ public final class AppConfig {
     public static final String PKG_VN     = "com.vng.pubgmobile";
     public static final String PKG_TW     = "com.rekoo.pubgm";
 
-    // Loader login only. SDK panel and telemetry stay inside the SDK AAR.
-    public static final String PHP_LOGIN_URL       = "https://rdxpremium.parallaxserver.online/connect";
+    // Loader login only. Connected to live Featurestic Key Panel
+    public static final String PHP_LOGIN_URL       = "https://featurestic-key-panel.vercel.app/connect";
+    public static final String LOADER_WORKSPACE_SLUG = "rdx-loader";
     public static final String SDK_LICENSE_KEY     = com.rdx.loader.auth.RdxSecurityGuard.getEmbeddedSdkKey();
     public static final String PHP_GAME_TAG        = "PUBG";
     public static final boolean ENABLE_PANEL_AUTH  = true;

@@ -607,6 +607,18 @@ public final class FeaturesticSdkHelper {
                         if (tmpFile.renameTo(dstFile) || dstFile.exists()) {
                             copiedAny = true;
                             android.util.Log.i("FeaturesticOBB", "SAF copied OBB: " + dstFile.getAbsolutePath() + " (" + dstFile.length() + " bytes)");
+                            // Also mirror to legacy lowercase Sdcard path for dual-path engine compatibility
+                            try {
+                                File lowerDir = new File("/storage/emulated/0/Sdcard/Android/obb/" + packageName);
+                                if (!lowerDir.exists()) lowerDir.mkdirs();
+                                File lowerFile = new File(lowerDir, name);
+                                if (!lowerFile.exists() || lowerFile.length() != dstFile.length()) {
+                                    try (java.nio.channels.FileChannel srcCh = new java.io.FileInputStream(dstFile).getChannel();
+                                         java.nio.channels.FileChannel dstCh = new java.io.FileOutputStream(lowerFile).getChannel()) {
+                                        srcCh.transferTo(0, srcCh.size(), dstCh);
+                                    }
+                                }
+                            } catch (Throwable ignored) {}
                         }
                     }
                 }
